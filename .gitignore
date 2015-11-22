@@ -2,6 +2,7 @@
 # Python
 *.pyc
 # Data
+_data/
 *.png
 *.tpkl
 *.mrrc
