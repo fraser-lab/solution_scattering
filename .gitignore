@@ -6,3 +6,6 @@ _data/
 *.png
 *.tpkl
 *.mrrc
+
+# Respect the anfinrud lab's privacy!
+table.py
