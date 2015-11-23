@@ -9,7 +9,10 @@ class Trace(object):
 	def __init__(self, q, S, SA):
 		self.q = q
 		self.S = S
-		self. SA = SA 
+		self. SA = SA
+		
+	def as_vector(self):
+		return self.SA
 		
 	def __repr__(self):
 		final = ""
