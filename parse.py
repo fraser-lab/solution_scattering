@@ -25,9 +25,11 @@ def parse_tpkl(filename):
 		raise
 	data = load(filename)
 	q = data['q']
+	sigS = data['sigS']
 	S = data['S']
+	sigSA = data['sigSA']
 	SA = data['SA']
-	return Trace(q, S, SA)
+	return Trace(q, sigS, S, sigSA, SA)
 
 
 # Little stub for testing

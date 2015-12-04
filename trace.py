@@ -6,12 +6,15 @@ Benjamin Barad
 """
 
 class Trace(object):
-	def __init__(self, q, S, SA):
+	def __init__(self, q, sigS, S, sigSA, SA):
 		self.q = q
+		self.sigS = sigS
 		self.S = S
+		self.sigSA = sigSA
 		self. SA = SA
 		
 	def as_vector(self):
+		""" The SA column is the air-scattering adjusted integrated intensity"""
 		return self.SA
 		
 	def __repr__(self):
