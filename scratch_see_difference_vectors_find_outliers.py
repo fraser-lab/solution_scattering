@@ -15,6 +15,7 @@ length = 0
 directories = argv[1:]
 for directory in directories:
 	files = listdir(directory)
+	print files
 	# for index, _ in enumerate()
 	# print length
 	for file in files:
@@ -22,9 +23,12 @@ for directory in directories:
 		
 subtracted_vectors = []	
 fig,ax = plt.subplots()
-for index, _ in enumerate(vectors[1::2]):
-	# subtracted_vectors.append(vectors[2*index]-vectors[2*index-1])
-	ax.plot(vectors[2*index]-vectors[2*index-1], "-")
+# for index, _ in enumerate(vectors[1::2]):
+for index, _ in enumerate(vectors):
+	# print files[2*index+1] + "-" + files[2*index] 
+	x = [0.0025*x for x in range(len(vectors[index]))]
+	ax.plot(x, [np.log(i) for i in vectors[index]], "-")
+	# ax.plot(x, vectors[2*index+1]-vectors[2*index], "-")
 	
 plt.show()
 

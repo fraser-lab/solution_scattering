@@ -14,20 +14,22 @@ vectors = []
 length = 0
 directories = argv[1:]
 # fig,ax = plt.subplots()
+files = []
 for directory in directories:
 	files = listdir(directory)
 	# for index, _ in enumerate()
 	# print length
 	for file in files:
-		vectors.append(parse_tpkl("{0}/{1}".format(directory,file)).as_vector()[10:])
+		vectors.append(parse_tpkl("{0}/{1}".format(directory,file)).as_vector())
 		# ax.plot(parse_tpkl("{0}/{1}".format(directory,file)).as_vector(), "-")
-		
+print files
 subtracted_vectors = []	
 
 for index, _ in enumerate(vectors[1::2]):
-	subtracted_vectors.append(vectors[2*index]-vectors[2*index-1])
+	# print files[2*index]
+	print files[2*index+1] + "-" + files[2*index] 
+	subtracted_vectors.append(vectors[2*index+1]-vectors[2*index])
 	# ax.plot(vectors[2*index]-vectors[2*index-1], "-")
-	
 # plt.show()
 
 # matrix = np.matrix(vectors).transpose()
@@ -46,10 +48,10 @@ u,s,v = svd(matrix, full_matrices=False)
 
 fig, ax = plt.subplots()
 i = 0
-for vector in v.tolist()[0:7]:
+for vector in v.tolist()[0:3]:
 	# print vector
 	# ax.plot(range(len(vectors)), [value+i for value in vector], "-")
-	ax.plot(range(len(subtracted_vectors)),[value+i*0.3 for value in vector], "-")
+	ax.plot(x,[value+i*0.3 for value in vector], "-")
 	i+=1
 
 
@@ -58,7 +60,8 @@ i = 0
 for vector in u.transpose().tolist()[0:7]:
 	# print vector
 	# ax.plot(range(len(vectors)), [value+i for value in vector], "-")
-	ax2.plot([value+i for value in vector], "-")
+	x = [i*0.025 for i in range(len(vector))]	
+	ax2.plot(x, [value+i for value in vector], "-")
 	i+=0.3
 	
 fig3, ax3= plt.subplots()
