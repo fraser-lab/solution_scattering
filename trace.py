@@ -12,10 +12,17 @@ class Trace(object):
 		self.S = S
 		self.sigSA = sigSA
 		self. SA = SA
-		
+
+	def apply_i0_scaling(self, scale_factor):
+		self.scaled_SA = self.SA/scale_factor
+		return self.scaled_SA
+
 	def as_vector(self):
 		""" The SA column is the air-scattering adjusted integrated intensity"""
 		return self.SA
+	
+	def get_q(self):
+		return self.q
 		
 	def __repr__(self):
 		final = ""
