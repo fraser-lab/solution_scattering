@@ -4,7 +4,10 @@ scratch.py
 
 # Python
 *.pyc
+
 # Data
+*.log
+*.csv
 _data/
 *.png
 *.tpkl
