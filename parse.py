@@ -36,4 +36,5 @@ def parse_tpkl(filename):
 if __name__ == "__main__":
 	from sys import argv
 	filename = argv[1]
-	print parse_tpkl(filename)
+	trace = parse_tpkl(filename)
+	print trace
