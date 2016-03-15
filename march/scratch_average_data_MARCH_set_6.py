@@ -25,7 +25,7 @@ from parse import parse_tpkl, alg_scale, Q
 length = 0
 directories = argv[1:]
 # reference = parse_tpkl("/Volumes/BAB_AGORA/CypA-time-series-5/xray_images/CypA-5_2_7.001C_4_100us_off.tpkl".format(directories[0]))
-reference = parse_tpkl("/Volumes/BAB_AGORA/CypA-buffer-time-series-7/xray_images/CypA-Buffer-7_4_14.001C_1_56.2us_off.tpkl".format(directories[0]))
+# reference = parse_tpkl("/Volumes/BAB_AGORA/CypA-buffer-time-series-7/xray_images/CypA-Buffer-7_4_14.001C_1_56.2us_off.tpkl".format(directories[0]))
 # fig,ax = plt.subplots()
 # files = []
 all_vectors = []
@@ -42,13 +42,15 @@ for directory in directories:
 						# onstring = subprocess.check_output("grep {0}_{1}_{2}_{3}_on beamstop-1.log".format(PREFIX, temp, i+1, time), shell=True)
 						# onscale = int(onstring.split()[3])
 						on = parse_tpkl("{0}/{1}_{2}_{3}_{4}_{5}_on.tpkl".format(directory, PREFIX, megarep+1, temp, i+1, time))
-						on_scaled = alg_scale(reference, on)
+						# on_scaled = alg_scale(reference, on)
+						on_scaled = on.scale_isosbestic()
 						# on = parse_tpkl("{0}/{1}_{2}_{3}_{4}_on.tpkl".format(directory, PREFIX, temp, i+1, time)).as_vector()[80:]
 	
 						# offstring = subprocess.check_output("grep {0}_{1}_{2}_{3}_off beamstop-1.log".format(PREFIX, temp, i+1, time), shell=True)
 						# offscale = int(offstring.split()[3])
 						off = parse_tpkl("{0}/{1}_{2}_{3}_{4}_{5}_off.tpkl".format(directory, PREFIX, megarep+1, temp, i+1, time))
-						off_scaled = alg_scale(reference, off)
+						# off_scaled = alg_scale(reference, off)
+						off_scaled = off.scale_isosbestic()
 						print "{0}/{1}_{2}_{3}_{4}_{5}_on.tpkl".format(directory, PREFIX, megarep+1, temp, i+1, time)
 	
 						subtracted = [on_scaled[j] - off_scaled[j] for j in range(len(on_scaled))]
@@ -77,7 +79,7 @@ for time in TIMES:
 	plots.append(ax.plot(q, averaged_vector, label=time)[0])
 	averaged_vectors.append((time, averaged_vector))
 	
-with open("set_6_protein_averaged_scaled.csv", 'wb') as csvfile:
+with open("set_6_protein_averaged_scaled_isosbestic.csv", 'wb') as csvfile:
 	writer = csv.writer(csvfile, delimiter="\t")
 	writer.writerow(["q"]+[i[0] for i in averaged_vectors])
 	print ["q"]+[i[0] for i in averaged_vectors]
