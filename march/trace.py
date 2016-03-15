@@ -17,6 +17,13 @@ class Trace(object):
 		self.scaled_SA = self.SA/scale_factor
 		return self.scaled_SA
 
+	def scale_isosbestic(self):
+		scale = sum([self.SA[i]*self.q[i]*0.0025 for i in range(553,633)])
+		print scale
+		self.scaled_SA = self.SA/scale
+		return self.scaled_SA
+
+
 	def as_vector(self):
 		""" The SA column is the air-scattering adjusted integrated intensity"""
 		return self.SA
