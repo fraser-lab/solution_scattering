@@ -24,12 +24,13 @@ def parse_tpkl(filename):
 		files. Try using a different file format for input"""
 		raise
 	data = load(filename)
-	q = data['q']
-	sigS = data['sigS']
-	S = data['S']
-	sigSA = data['sigSA']
-	SA = data['SA']
-	return Trace(q, sigS, S, sigSA, SA)
+	q = data.q
+	sigS = data.sigS
+	S = data.S
+	sigSA = data.sigSA
+	SA = data.SA
+	Nj = data.Nj
+	return Trace(q, sigS, S, sigSA, SA, Nj)
 
 
 # Little stub for testing

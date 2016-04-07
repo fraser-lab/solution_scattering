@@ -6,16 +6,24 @@ Benjamin Barad
 """
 
 class Trace(object):
-	def __init__(self, q, sigS, S, sigSA, SA):
+	def __init__(self, q, sigS, S, sigSA, SA, Nj):
 		self.q = q
 		self.sigS = sigS
 		self.S = S
 		self.sigSA = sigSA
 		self. SA = SA
+		self.Nj = Nj
 
 	def apply_i0_scaling(self, scale_factor):
 		self.scaled_SA = self.SA/scale_factor
 		return self.scaled_SA
+
+	def scale_isosbestic(self):
+		scale = sum([self.SA[i]*self.q[i]*0.0025 for i in range(553,633)])
+		print scale
+		self.scaled_SA = self.SA/scale
+		self.scaled_sigSA = self.sigSA/scale
+		return (self.scaled_SA, self.scaled_sigSA)
 
 	def as_vector(self):
 		""" The SA column is the air-scattering adjusted integrated intensity"""
@@ -25,9 +33,9 @@ class Trace(object):
 		return self.q
 		
 	def __repr__(self):
-		final = ""
+		final = "Q\tSA\tsigSA\tNj\n"
 		for index, _ in enumerate(self.q):
-			final += ("{0}\t{1}\t{2}\n".format(self.q[index], self.S[index],
-						  self.SA[index]))
+			final += ("{0}\t{1}\t{2}\t{3}\n".format(self.q[index], self.SA[index],
+						  self.sigSA[index],self.Nj[index]))
 		return final
 			
