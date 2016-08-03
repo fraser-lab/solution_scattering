@@ -14,7 +14,7 @@ from numpy.linalg import svd
 """Statics"""
 TEMPS = ["14C"]
 TIMES = ["-10us",  "10ns", "17.8ns", "31.6ns", "56.2ns", "75ns", "100ns", "133ns", "178ns", "316ns", "562ns", "1us", "1.78us", "3.16us", "5.62us", "10us", "17.8us", "31.6us", "56.2us", "100us", "178us", "316us", "562us", "1ms", "1.78ms", "3.16ms", "5.62ms", "10ms"] # 
-# MEGAREPS = 2
+MEGAREPS = 2
 REPS = 24
 # PREFIX = "CypA-6"
 # PREFIX = "CypA-5"
@@ -35,22 +35,22 @@ for directory in directories:
 	# files = listdir(directory)
 	# for index, _ in enumerate()
 	# print length
-	# for megarep in range(MEGAREPS):
+	for megarep in range(MEGAREPS):
 		for i in range(REPS): 
 			for temp in TEMPS:
 				for index, time in enumerate(TIMES):
 					try: 
 						# onstring = subprocess.check_output("grep {0}_{1}_{2}_{3}_on beamstop-1.log".format(PREFIX, temp, i+1, time), shell=True)
 						# onscale = int(onstring.split()[3])
-						on = parse_tpkl("{0}/{1}_{2}_{3}_on.tpkl".format(directory, PREFIX, i+1, time))
+						on = parse_tpkl("{0}/{1}_{2}_{3}_{4}_on.tpkl".format(directory, PREFIX, megarep+1, i+1, time))
 						on_scaled = alg_scale(reference, on)
 						# on = parse_tpkl("{0}/{1}_{2}_{3}_{4}_on.tpkl".format(directory, PREFIX, temp, i+1, time)).as_vector()[80:]
 	
 						# offstring = subprocess.check_output("grep {0}_{1}_{2}_{3}_off beamstop-1.log".format(PREFIX, temp, i+1, time), shell=True)
 						# offscale = int(offstring.split()[3])
-						off = parse_tpkl("{0}/{1}_{2}_{3}_off.tpkl".format(directory, PREFIX, i+1, time))
+						off = parse_tpkl("{0}/{1}_{2}_{3}_{4}_off.tpkl".format(directory, PREFIX, megarep+1, i+1, time))
 						off_scaled = alg_scale(reference, off)
-						print "{0}/{1}_{2}_{3}_on.tpkl".format(directory, PREFIX, i+1, time)
+						print "{0}/{1}_{2}_{3}_{4}_on.tpkl".format(directory, PREFIX, megarep+1, i+1, time)
 	
 						subtracted = [on_scaled[j] - off_scaled[j] for j in range(len(on_scaled))]
 

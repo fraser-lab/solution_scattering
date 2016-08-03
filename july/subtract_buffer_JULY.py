@@ -11,12 +11,12 @@ import csv
 
 # sample_filename = "fast_times_sample_averaged.csv"
 # sample_filename = "S99T_protein.csv"
-sample_filename = "S99T_HD_protein_water_ring.csv"
-sample_filename_2 = "WT_HD_protein_water_ring.csv"
+sample_filename = "S99T_HD_outlier_free.csv"
+sample_filename_2 = "WT_HD_protein_onoff_stdevs.csv"
 # buffer_filename ="fast_times_buffer_averaged.csv"
 # buffer_filename ="S99T_buffer.csv" #set_3_
-buffer_filename = "S99T_HD_buffer_water_ring.csv"
-buffer_filename_2 = "WT_HD_buffer_water_ring.csv"
+buffer_filename = "S99T_HD_buffer_outlier_free.csv"
+buffer_filename_2 = "WT_HD_buffer_outlier_free.csv"
 
 
 # TIMES = ["10ns", "100ns", "1us", "10us"]
@@ -43,18 +43,23 @@ subtracted_dict_2 = []
 fig, ax = plt.subplots()
 plots=[]
 for time in TIMES:
+  print sample_table_2[time]
   subtracted_dict.append((time, (sample_table[time] - buffer_table[time]).values)) # 
   subtracted_dict_2.append((time, (sample_table_2[time] - buffer_table_2[time]).values))
-  ax.plot(sample_table.index.values, [i*q for i,q in zip((sample_table[time] - buffer_table[time]),sample_table.index.values)], label=time) # 
+  ax.plot(sample_table.index.values, [i*q for i,q in zip(((sample_table_2[time]-buffer_table_2[time])-(sample_table[time] - buffer_table[time])),sample_table.index.values)], label=time) # 
+  #   ax.plot(sample_table.index.values, [i*q for i,q in zip(((sample_table_2[time]-buffer_table_2[time])-(sample_table[time] - buffer_table[time])),sample_table.index.values)], label=time) # 
+
+
+
 
 ax.set_xscale("log", nonposx='clip')
-ax.legend(loc='lower right', ncol=2, framealpha=0.8)
+ax.legend(loc='lower right', ncol=4, fontsize="small", framealpha=0.8)
 ax.grid()
-ax.set_ylabel(r"$\Delta I$")
+ax.set_ylabel(r"$\Delta\Delta\Delta I$")
 ax.set_xlabel(r"Q ($nm^{-1}$)")
-plt.tight_layout()
-plt.show()
-fig.savefig("high_density_S99T_iso.png")
+# plt.tight_layout()
+# plt.show()
+fig.savefig("WT-S99T-High-Outlers.png")
 
 
 times_numeric = []
@@ -73,19 +78,33 @@ for time in TIMES[1:]:
 
 fig2,ax2 = plt.subplots()
 ax2.set_title("Integrated AUC", y=1.05)
-ax2.plot(times_numeric, [-1*sum(subtracted_dict[i][1][1:9]) for i in range(1,len(TIMES))], label="S99T AUC")
-ax2.plot(times_numeric, [-1*sum(subtracted_dict_2[i][1][1:9]) for i in range(1,len(TIMES))], label="WT AUC")
+ax2.plot(times_numeric, [-1*sum(subtracted_dict[i][1][0:12])*.0025 for i in range(1,len(TIMES))], ".", label="S99T AUC", color = "#5DA5DA")
+ax2.plot(times_numeric, [-1*sum(subtracted_dict_2[i][1][0:12])*.0025 for i in range(1,len(TIMES))], ".", label="WT AUC", color = "#FAA43A")
+
 # ax2.plot(times_numeric, [-1*sum(subtracted_dict[i][1][13:33]) for i in range(1,len(TIMES))], color="red", label="Integrated AUC from 0.05 to 0.1")
 ax2.set_xlabel("Time (ns)")
 ax2.set_xscale("log", nonposx='clip')
 ax2.set_ylabel("AUC (q=0.02-0.04)")
 ax2.grid()
-ax2.legend(loc='lower left', ncol=1, framealpha=0.8)
+ax2.legend(loc='upper left', ncol=1, framealpha=0.8)
+# plt.tight_layout()
+# plt.show()
+fig2.savefig("Combined_HD_AUC_Plot_outliers.png")
+
+fig3, ax3 = plt.subplots()
+ax3.set_title("Difference in Integrated AUC between WT and S99T", y=1.05)
+data_values = [-1*(sum(subtracted_dict_2[i][1][0:11])-sum(subtracted_dict[i][1][3:11]))*.0025 for i in range(1,len(TIMES))]
+ax3.plot(times_numeric, data_values, ".", label="WT - S99T", color="#60BD68")
+ax3.set_xlabel("Time (ns)")
+ax3.set_xscale("log", nonposx='clip')
+ax3.set_ylabel("Change in AUC(q=0.03-0.05)")
+ax3.grid()
+ax3.legend(loc='upper left', ncol=1, framealpha=0.8)
 plt.tight_layout()
 plt.show()
-fig2.savefig("Combined_HD_AUC_Plot_iso.png")
+fig3.savefig("Difference_HD_AUC_Plot_outliers.png")
 
-
+  
   
 # with open("14C_total_subtraction.csv", 'wb') as csvfile:
 #   writer = csv.writer(csvfile, delimiter="\t")

@@ -6,7 +6,7 @@ Benjamin Barad
 from numpy import recarray, load
 from trace import Trace
 
-Q = [0.0175 + 0.0025 * i for i in range(2125)]
+# Q = [0.0175 + 0.0025 * i for i in range(2125)]
 # print Q
 
 def parse(filename, mode="tpkl"):
@@ -42,13 +42,14 @@ def alg_scale(ref, var):
 	# print q
 	# return SA_var
 	# top = sum([SA_ref[i]*Q[i]*SA_var[i]*Q[i] for i in range(len(SA_ref))])
-	top = sum([SA_ref[i]*Q[i]*SA_var[i]*Q[i] for i in range(1793,2074)])
+	top = sum([SA_ref[i]*ref.q[i]*SA_var[i]*ref.q[i] for i in range(1792,2073)])
 	# bottom = sum([(SA_var[i]*Q[i])**2 for i in range(len(SA_var))])
-	bottom = sum([(SA_var[i]*Q[i])**2 for i in range(1793,2074)])
+	bottom = sum([(SA_var[i]*ref.q[i])**2 for i in range(1792, 2073)]) # 552,633
 	scalar = top/bottom
 	print "scalar: ", scalar
 	SA_adjusted = [i*scalar for i in SA_var]
-	return SA_adjusted
+	sig_SA_adjusted = [i*scalar for i in var.sigSA]
+	return SA_adjusted, sig_SA_adjusted
 
 # Little stub for testing
 if __name__ == "__main__":
