@@ -4,6 +4,7 @@ making traces.
 Benjamin Barad
 """
 from numpy import recarray, load
+from scipy import stats
 from trace import Trace
 
 # Q = [0.0175 + 0.0025 * i for i in range(2125)]
@@ -46,10 +47,18 @@ def alg_scale(ref, var):
 	# bottom = sum([(SA_var[i]*Q[i])**2 for i in range(len(SA_var))])
 	bottom = sum([(SA_var[i]*ref.q[i])**2 for i in range(1792, 2073)]) # 552,633
 	scalar = top/bottom
-	print "scalar: ", scalar
+	# print "scalar: ", scalar
 	SA_adjusted = [i*scalar for i in SA_var]
 	sig_SA_adjusted = [i*scalar for i in var.sigSA]
 	return SA_adjusted, sig_SA_adjusted
+
+def lin_regress_scale(ref, var):
+	## Performs like algebraic scaling but trains on a much larger q range so alg_scale is preferable.
+	slope = stats.linregress([ref.SA[i]*ref.q[i] for i in range(100,2073)], [var.SA[i]*ref.q[i] for i in range(100,2073)])[0]
+	print slope
+	var.SA_adjusted = [i/slope for i in var.SA]
+	var.sigSA_adjusted = [i/slope for i in var.sigSA]
+	return var.SA_adjusted, var.sigSA_adjusted
 
 # Little stub for testing
 if __name__ == "__main__":

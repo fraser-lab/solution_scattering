@@ -12,6 +12,9 @@ _data/
 *.png
 *.tpkl
 *.mrrc
+*.dat
+*.tar.gz
+*.pkl
 
 # Respect the anfinrud lab's privacy!
 table.py

@@ -12,20 +12,25 @@ from numpy.linalg import svd
 
 
 
+
+
 """Statics"""
+CHI_OUTLIER = 1.5
 TEMPS = ["14C"]
 TIMES = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us", "316us", "422us", "562us", "750us", "1ms"] # 
+# TIMES = ["-10.1us", "100us"]
 # TIMES = ["-10.1us", "1us", "10us", "100us", "1ms"]
 # TIMES = ["-10.1us"]
 # TIMES = ["-10us",  "10ns", "17.8ns", "31.6ns", "56.2ns", "75ns", "100ns", "133ns", "178ns", "316ns", "562ns", "1us", "1.78us", "3.16us", "5.62us", "10us", "17.8us", "31.6us", "56.2us", "100us", "178us", "316us", "562us", "1ms", "1.78ms", "3.16ms", "5.62ms", "10ms"] # 
 # MEGAREPS = 2
-REPS = 50
+REPS = range(5,50)
 # PREFIX = "CypA-6"
 # PREFIX = "CypA-5"
-PREFIX = "CypA-WT-1"
-PKL_FILENAME = "WT_protein_inverse.pkl"
+PREFIX = "CypA-S99T-2"
+PKL_FILENAME = "S99T_buffer_chi.pkl"
+DATFILE_PREFIX = "S99T_buffer"
 
-from parse import parse_tpkl, alg_scale
+from parse import parse_tpkl, alg_scale, lin_regress_scale
 
 
 length = 0
@@ -41,7 +46,7 @@ for directory in directories:
 	# for index, _ in enumerate()
 	# print length
 	# for megarep in range(MEGAREPS):
-		for i in range(1,REPS): 
+		for i in REPS: 
 			for temp in TEMPS:
 				for index, time in enumerate(TIMES):
 					try: 
@@ -49,6 +54,7 @@ for directory in directories:
 						# onscale = int(onstring.split()[3])
 						on = parse_tpkl("{0}/{1}_{2}_{3}_on.tpkl".format(directory, PREFIX, i+1, time))
 						on_scaled = alg_scale(reference, on)
+						# on_scaled = lin_regress_scale(reference, on)
 						# on_scaled = on.scale_isosbestic()[0]
 						# on = parse_tpkl("{0}/{1}_{2}_{3}_{4}_on.tpkl".format(directory, PREFIX, temp, i+1, time)).as_vector()[80:]
 						if index > 0:
@@ -59,27 +65,39 @@ for directory in directories:
 						# offscale = int(offstring.split()[3])
 						off = parse_tpkl("{0}/{1}_{2}_-10us{3}_on.tpkl".format(directory, PREFIX, i+1, off_count))
 						off_scaled = alg_scale(reference, off)
+						# off_scaled = lin_regress_scale(reference, off)
 						# off_scaled = off.scale_isosbestic()[0]
 						# print "{0}/{1}_{2}_{3}_on.tpkl".format(directory, PREFIX, i+1, time)
-	
+						# 
 						subtracted = [(on_scaled[0][j] - off_scaled[0][j], np.sqrt(on_scaled[1][j]**2 + off_scaled[1][j]**2)) for j in range(len(on.q))]
+						# subtracted = [(on_scaled[0][j], np.sqrt(on_scaled[1][j]**2)) for j in range(len(on.q))]
 
 						# print "appending"
-						all_vectors.append(off_scaled)
-						all_vectors.append(on_scaled)
 						subtracted_vectors[time].append(subtracted)
 					except:
 						pass
 						print "one or both of the on/off pairs was tossed:"
 						print "{0}/{1}_{2}_{3}_on.tpkl".format(directory, PREFIX, i+1, time)
 
-q = on.q
-fig, ax = plt.subplots()	
-plots = []
-averaged_vectors = []				
-for time in TIMES:
-	vectors = subtracted_vectors[time]
-	# print vectors
+def chisquared(var, ref):
+	nu = len(var)-1.0
+	I, sigma = zip(*var) 
+	Iref,sigmaref = zip(*ref)
+	chi_squared = 1/nu*sum([(I[i]-Iref[i])**2/(sigmaref[i]**2)  for i in range(len(var))])
+	# print chi_squared
+	return chi_squared
+
+def chi_outliers(vectors, reference_vector):
+	list = [chisquared(i, reference_vector) for i in vectors]
+	print np.mean(list), np.std(list)
+	outlier_list = []
+	for i, val in enumerate(list):
+		if val > CHI_OUTLIER:
+			outlier_list.append(i)
+			# print i, val
+	return outlier_list
+
+def combine_vectors_outliers(vectors):
 	averaged_vector = []
 	for i in range(len(vectors[0])):
 		value_list = [v[i] for v in vectors]
@@ -95,6 +113,26 @@ for time in TIMES:
 		# std_tot = np.sqrt(1/sum([1/stds[i]**2 for i,_ in enumerate(means)]))
 		# print on.q[i], avg_mean, std_mean, std_prop, std_tot
 		averaged_vector.append((avg_mean, std_tot))
+	outlier_list = chi_outliers(vectors, averaged_vector)
+	if len(outlier_list) > 0:
+		new_vectors = [vector for i,vector in enumerate(vectors) if i not in outlier_list]
+		print len(new_vectors)
+		averaged_vector = combine_vectors_outliers(new_vectors)
+	return averaged_vector
+
+
+
+q = on.q
+fig, ax = plt.subplots()	
+plots = []
+averaged_vectors = []				
+for time in TIMES:
+	print "===="
+	print time
+	vectors = subtracted_vectors[time]
+	averaged_vector = combine_vectors_outliers(vectors)
+	# outlier_list = chi_outliers(vectors, averaged_vector)
+	# final_averaged = chi_outliers()
 		# print on.q[i], np.mean(value_list), np.std(value_list)
 	plots.append(ax.errorbar(q, zip(*averaged_vector)[0], yerr=zip(*averaged_vector)[1], label=time)[0])
 	averaged_vectors.append((time, averaged_vector))
@@ -106,13 +144,22 @@ for time in TIMES:
 # 	for i in range(len(averaged_vector)):
 # 		writer.writerow([on.q[i]]+[[j[1][i][0],j[1][i][1]] for j in averaged_vectors])
 
-with open(PKL_FILENAME, "wb") as pklfile:
-	pkl.dump(averaged_vectors, pklfile)
+
+def make_pkl(vectors):
+	with open(PKL_FILENAME, "wb") as pklfile:
+		pkl.dump(averaged_vectors, pklfile)
 
 
-
+def make_dats(vectors):
+	for index,time in enumerate(TIMES):
+		vector = vectors[index]
+		with open("datfiles/{}_{}_{}.dat".format(DATFILE_PREFIX, time, DATFILE_POSTFIX), "wb") as dat_file:
+			for i in range(len(averaged_vector)):
+				dat_file.write("{} {} {}\n".format(on.q[i], vector[i][0], vector[i][1]))
 	
 ax.set_xscale("log", nonposx='clip')
 # plt.legend(plots, loc='upper center', bbox_to_anchor=(0.5, 1.25),
 #           ncol=3, fancybox=True, shadow=True)
 plt.show()
+# make_pkl(averaged_vectors)
+# make_dats(averaged_vectors)
