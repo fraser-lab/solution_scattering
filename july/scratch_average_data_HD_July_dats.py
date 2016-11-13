@@ -182,15 +182,10 @@ def combine_off_vectors(free_off_vectors):
 		combined_off_vector.append((avg_mean_off, std_tot_off))
 	return combined_off_vector
 
+for vectors in free_off_vectors:
 
 averaged_off_vector = combine_off_vectors(free_off_vectors)
 print averaged_off_vector
-# with open("WT_HD_protein_onoff_stdevs.csv", 'wb') as csvfile:
-# 	writer = csv.writer(csvfile, delimiter="\t")
-# 	writer.writerow(["q"]+[str.join(i[0],"\t","sig", for i in averaged_vectors])
-# 	print ["q"]+[i[0] for i in averaged_vectors]
-# 	for i in range(len(averaged_vector)):
-# 		writer.writerow([on.q[i]]+[[j[1][i][0],j[1][i][1]] for j in averaged_vectors])
 
 
 def make_pkl(vectors):
@@ -213,8 +208,8 @@ def make_dats(on_vectors, averaged_off_vector):
 
 
 ax.set_xscale("log", nonposx='clip')
-# plt.legend(plots, loc='upper center', bbox_to_anchor=(0.5, 1.25),
-#           ncol=3, fancybox=True, shadow=True)
-# plt.show()
+plt.legend(plots, loc='upper center', bbox_to_anchor=(0.5, 1.25),
+          ncol=3, fancybox=True, shadow=True)
+plt.show()
 # make_pkl(averaged_vectors)
-make_dats(averaged_on_vectors, averaged_off_vector)
+# make_dats(averaged_on_vectors, averaged_off_vector)

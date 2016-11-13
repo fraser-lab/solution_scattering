@@ -22,7 +22,7 @@ from parse import parse
 
 ### 
 TEMPS = ["14C", "14.001C"]
-TIMES = ["-1us",  "10ns", "31.6ns", "100ns", "316ns", "1us", "3.16us", "10us", "31.6us", "100us", "316us", "1ms", "3.16ms", "10ms"] # 
+TIMES = ["-1us",  "10ns", "17.8ns", "31.6ns", "56.2ns", "75ns", "100ns", "133ns", "178ns", "316ns", "562ns", "1us", "1.78us", "3.16us", "5.62us", "10us", "17.8us", "31.6us", "56.2us", "100us", "178us", "316us", "562us", "1ms", "1.78ms", "3.16ms", "5.62ms", "10ms"]
 # TIMES = ["-1us"]
 MEGAREPS = 5
 REPS = 5
@@ -58,16 +58,23 @@ for megarep in range(MEGAREPS):
           print "No data for Megarep {} and rep {}".format(megarep+1, i+1)
 
 for time in TIMES:
+  ### ONS
   ons_SA, ons_sigSA = zip(*ons[time])
+  ons_SA_stdev = [np.std([i[j] for i in ons_SA]) for j in range(len(ons_SA[0]))]
   on_average_SA = sum(ons_SA)/len(ons_SA)
-  on_average_sigSA = np.power(sum([np.power(i, 2) for i in ons_sigSA])/len(ons_sigSA)**2,0.5)
-  with open("buffer_{}_on.dat".format(time), 'w') as file:
+  # on_average_sigSA = np.power(sum([np.power(i, 2) for i in ons_sigSA])/len(ons_sigSA)**2,0.5)
+  with open("sample_{}_on.dat".format(time), 'w') as file:
     for i, q in enumerate(on.q):
-      file.write("{} {} {}\n".format(q, on_average_SA[i], on_average_sigSA[i]))
+      file.write("{} {} {}\n".format(q, on_average_SA[i], ons_SA_stdev[i]))
+  
+  ### OFFS
   ons_SA, ons_sigSA = zip(*offs[time])
+  ons_SA_stdev = [np.std([i[j] for i in ons_SA]) for j in range(len(ons_SA[0]))]
   on_average_SA = sum(ons_SA)/len(ons_SA)
-  on_average_sigSA = np.power(sum([np.power(i, 2) for i in ons_sigSA])/len(ons_sigSA)**2,0.5)
-  with open("buffer_{}_off.dat".format(time), 'w') as file:
+  # on_average_sigSA = np.power(sum([np.power(i, 2) for i in ons_sigSA])/len(ons_sigSA),0.5)
+  with open("sample_{}_off.dat".format(time), 'w') as file:
     for i, q in enumerate(on.q):
-      file.write("{} {} {}\n".format(q, on_average_SA[i], on_average_sigSA[i]))
+      file.write("{} {} {}\n".format(q, on_average_SA[i], ons_SA_stdev[i]))
+
+
     

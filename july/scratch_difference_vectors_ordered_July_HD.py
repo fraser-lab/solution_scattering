@@ -14,7 +14,7 @@ from numpy.linalg import svd
 TEMPS = ["14C"]
 TIMES = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us", "316us", "422us", "562us", "750us", "1ms"] # 
 # MEGAREPS = 2
-REPS = 50
+REPS = 25
 # PREFIX = "CypA-6"
 # PREFIX = "CypA-5"
 PREFIX = "CypA-WT-Buffer-1"
@@ -33,7 +33,7 @@ for directory in directories:
 	# files = listdir(directory)
 	# for index, _ in enumerate()
 	# print length
-	for i in range(5,REPS):
+	for i in range(REPS):
 		for temp in TEMPS:
 			for index, time in enumerate(TIMES):
 				try: 
@@ -102,16 +102,16 @@ for vector in v.tolist()[0:5]:
 	i+=1
 fig.savefig("timepoints.png")
 
-# fig2, ax2 = plt.subplots()
-# j = 0
+fig2, ax2 = plt.subplots()
+j = 0
 
-# for vector in u.transpose().tolist()[0:5]:
-# 	# print vector
-# 	# ax.plot(range(len(vectors)), [value+i for value in vector], "-")
-# 	x = [(i+7)*0.0025 for i in range(len(vector))]	
-# 	ax2.plot(x, [value for value in vector], "-")
-# 	j+=0.3
-# fig2.savefig("Singular_vectors_WT_HD_Unscaled.png")
+for vector in u.transpose().tolist()[0:5]:
+	# print vector
+	# ax.plot(range(len(vectors)), [value+i for value in vector], "-")
+	x = [(i+7)*0.0025 for i in range(len(vector))]	
+	ax2.plot(x, [value for value in vector], "-")
+	j+=0.3
+fig2.savefig("Singular_vectors_WT_HD_Unscaled.png")
 
 zero_vector_values_on = v.tolist()[0][1::2]
 zero_vector_values_off = v.tolist()[0][0::2]
@@ -132,9 +132,9 @@ for index, value in enumerate(v.tolist()[0]):
 
 
 	
-# fig3, ax3= plt.subplots()
-# ax3.plot([np.log(i) for i in s][0:10], "-")
-# fig3.savefig("Singular_values_WT_HD_Unscaled.png")
+fig3, ax3= plt.subplots()
+ax3.plot([np.log(i) for i in s][0:10], "-")
+fig3.savefig("Singular_values_WT_HD_Unscaled.png")
 
 plt.show()
 

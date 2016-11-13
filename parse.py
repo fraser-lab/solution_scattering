@@ -6,6 +6,9 @@ Benjamin Barad
 from numpy import recarray, load
 from trace import Trace
 
+Q = [0.0175 + 0.0025 * i for i in range(2125)]
+# print Q
+
 def parse(filename, mode="tpkl"):
 	"""Wrapper function for any loader functions that I may write besides 
 	tpkl. Just passes through to the appropriate place based on the `mode` 
@@ -32,6 +35,20 @@ def parse_tpkl(filename):
 	Nj = data.Nj
 	return Trace(q, sigS, S, sigSA, SA, Nj)
 
+def alg_scale(ref, var):
+	SA_ref = ref.SA
+	SA_var = var.SA
+	# q = SA_ref.q
+	# print q
+	# return SA_var
+	# top = sum([SA_ref[i]*Q[i]*SA_var[i]*Q[i] for i in range(len(SA_ref))])
+	top = sum([SA_ref[i]*Q[i]*SA_var[i]*Q[i] for i in range(1793,2074)])
+	# bottom = sum([(SA_var[i]*Q[i])**2 for i in range(len(SA_var))])
+	bottom = sum([(SA_var[i]*Q[i])**2 for i in range(1793,2074)])
+	scalar = top/bottom
+	print "scalar: ", scalar
+	SA_adjusted = [i*scalar for i in SA_var]
+	return SA_adjusted
 
 # Little stub for testing
 if __name__ == "__main__":
