@@ -43,9 +43,9 @@ def alg_scale(ref, var):
 	# print q
 	# return SA_var
 	# top = sum([SA_ref[i]*Q[i]*SA_var[i]*Q[i] for i in range(len(SA_ref))])
-	top = sum([SA_ref[i]*ref.q[i]*SA_var[i]*ref.q[i] for i in range(512, 593)]) #
+	top = sum([SA_ref[i]*ref.q[i]*SA_var[i]*ref.q[i] for i in range(1793, 2074)]) #
 	# bottom = sum([(SA_var[i]*Q[i])**2 for i in range(len(SA_var))])
-	bottom = sum([(SA_var[i]*ref.q[i])**2 for i in range(512, 593)]) # 552,633
+	bottom = sum([(SA_var[i]*ref.q[i])**2 for i in range(1793, 2074)]) # 552,633
 	scalar = top/bottom
 	print "scalar: ", scalar
 	SA_adjusted = [i*scalar for i in SA_var]

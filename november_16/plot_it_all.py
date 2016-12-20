@@ -295,7 +295,7 @@ x = times_numeric[1:]
 fig, ax = plt.subplots()
 x = x[11:20]
 y = [math.log(i) for i in y[11:20]]
-m,b = np.polyfit(x,y,1)
+m,b = np.polyfit(x,y,1, w=1/WT_integrated_errors)
 print m, b
 ax.plot(x, y, ".")
 ax.plot(x, [m*i + b for i in x], "-")
