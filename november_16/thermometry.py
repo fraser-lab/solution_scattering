@@ -12,15 +12,17 @@ from numpy.linalg import svd
 
 """Statics"""
 TEMPS = ["5C"]
-TIMES = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us", "316us", "422us", "562us", "750us", "1ms"] # 
+TIMES = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us"] # 
 # TIMES = ["-10.1us", "562ns", "1us", "1.78us", "3.16us", "5.62us", "10us", "17.8us", "31.6us", "56.2us", "100us", "178us", "316us", "562us", "1ms"]
 STATIC_REPS = range(32)
 STATIC_TEMPS = [-5,0,5,7,10,12,14,17,22,26] 
 # STATIC_TEMPS = [14,21,28]
-REPS = range(5,45)
+REPS = range(5,25)
 # PREFIX = "CypA-6"
 # PREFIX = "CypA-5"
-PREFIX = "CypA-Buffer-1"
+TR_DIRECTORIES = ["/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-1/xray_images", "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-2/xray_images", "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-4/xray_images",  "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-5/xray_images", "/Volumes/DatumsDepot/2016/Mike/APS_20160701/July_Beamline_Trip/Analysis/common/integration/CypA-WT/CypA-WT-Buffer-1/xray_images"] 
+TR_PREFIXES = ["CypA-Buffer-1", "CypA-Buffer-2", "CypA-Buffer-4", "CypA-Buffer-5", "CypA-WT-Buffer-1"]
+assert len(TR_PREFIXES) == len(TR_DIRECTORIES)
 # PREFIX = "CypA-WT-Buffer-1"
 STATIC_PREFIX = "CypA-ConcTemp-1_offBT"
 # STATIC_PREFIX = "CypA-WT-static-1_offBT"
@@ -28,7 +30,7 @@ from parse import parse_tpkl, alg_scale
 
 length = 0
 static_directory = argv[1]
-tr_directory = argv[2]
+tr_directories = argv[2:]
 # DIRECTORY_PREFIX = "/Volumes/DatumsDepot/2016/mike/APS_20161110/Analysis/WAXS/common/integration/CypA/"
 
 
@@ -48,54 +50,59 @@ for index, temp in enumerate(STATIC_TEMPS):
 		static_scaled = alg_scale(reference, static)[0]
 		vectors.append((static_scaled, static_string))
 
-
-# files = listdir(directory)
-# for index, _ in enumerate()
-# print length
-for i in REPS:
-	for temp in TEMPS:
-		for index, time in enumerate(TIMES):
-			try: 
-				# onstring = subprocess.check_output("grep {0}_{1}_{2}_{3}_on beamstop-1.log".format(PREFIX, temp, i+1, time), shell=True)
-				# onscale = int(onstring.split()[3])
-				# on = parse_tpkl("{0}/{1}_{2}_{3}_{4}_on.tpkl".format(directory, PREFIX, temp, i+1, time)).apply_i0_scaling(onscale)[80:]
-				on_string = "{0}/{1}_{2}_{3}.tpkl".format(tr_directory, PREFIX, i+1, time)
-				on = parse_tpkl(on_string)
-				on_scaled = alg_scale(reference, on)[0]
-				# on_scaled = on.as_vector()
-				if index > 0:
-						off_count = "-{}".format(index+1)
-				else:
-						off_count = ""
-				# offstring = subprocess.check_output("grep {0}_{1}_{2}_{3}_off beamstop-1.log".format(PREFIX, temp, i+1, time), shell=True)
-				# offscale = int(offstring.split()[3])
-				# off = parse_tpkl("{0}/{1}_{2}_{3}_{4}_off.tpkl".format(directory, PREFIX, temp, i+1, time)).apply_i0_scaling(offscale)[80:]
-				off_string = "{0}/{1}_{2}_-10us{3}.tpkl".format(tr_directory, PREFIX, i+1, off_count)
-				off = parse_tpkl(off_string)
-				off_scaled = alg_scale(reference, off)[0]
-				# off_scaled=off.as_vector()
-				# print "{0}/{1}_{2}_-10us{3}_on.tpkl".format(directory, PREFIX, i+1, off_count)
-				# print "appending"
-				vectors.append((off_scaled, off_string, on_string))
-				vectors.append((on_scaled, off_string, on_string))
-			except:
-				pass
-				print "one or both of the on/off pairs was tossed:"
-				print "{0}/{1}_{2}_{3}.tpkl".format(tr_directory, PREFIX, i+1, time)
-		
-# print files
+lengths = []
+for index,_ in enumerate(TR_DIRECTORIES):
+	tr_directory = TR_DIRECTORIES[index]
+	PREFIX = TR_PREFIXES[index]
+	length = 0
+	for i in REPS:
+		for temp in TEMPS:
+			for index, time in enumerate(TIMES):
+				try: 
+					on_string = "{0}/{1}_{2}_{3}.tpkl".format(tr_directory, PREFIX, i+1, time)
+					on = parse_tpkl(on_string)
+					on_scaled = alg_scale(reference, on)[0]
+					# on_scaled = on.as_vector()
+					if index > 0:
+							off_count = "-{}".format(index+1)
+					else:
+							off_count = ""
+					off_string = "{0}/{1}_{2}_-10us{3}.tpkl".format(tr_directory, PREFIX, i+1, off_count)
+					off = parse_tpkl(off_string)
+					off_scaled = alg_scale(reference, off)[0]
+					vectors.append((off_scaled, off_string, on_string))
+					vectors.append((on_scaled, off_string, on_string))
+					length += 2
+				except:
+					try: 
+						on_string = "{0}/{1}_{2}_{3}_on.tpkl".format(tr_directory, PREFIX, i+1, time)
+						on = parse_tpkl(on_string)
+						on_scaled = alg_scale(reference, on)[0]
+						# on_scaled = on.as_vector()
+						if index > 0:
+								off_count = "-{}".format(index+1)
+						else:
+								off_count = ""
+						off_string = "{0}/{1}_{2}_-10us{3}_on.tpkl".format(tr_directory, PREFIX, i+1, off_count)
+						off = parse_tpkl(off_string)
+						off_scaled = alg_scale(reference, off)[0]
+						vectors.append((off_scaled, off_string, on_string))
+						vectors.append((on_scaled, off_string, on_string))
+						length += 2
+					except:
+						pass
+						print "one or both of the on/off pairs was tossed:"
+						print "{0}/{1}_{2}_{3}.tpkl".format(tr_directory, PREFIX, i+1, time)
+	lengths.append(length)
+			
+print lengths
 q = on.q
 length = len(q)
-# for index, _ in enumerate(vectors[1::2]):
-# 	# print files[2*index]
-# 	print files[2*index+1] + "-" + files[2*index] 
-# 	subtracted_vectors.append(vectors[2*index+1]-vectors[2*index])
-# 	# ax.plot(vectors[2*index]-vectors[2*index-1], "-")
-# plt.show()
+
 
 
 # matrix = np.matrix([k[0] for k in vectors]).transpose()
-matrix = np.matrix([[q[j]*k[0][j] for j in range(length)] for k in vectors]).transpose()
+matrix = np.matrix([[q[j]*k[0][j] for j in range(20,length-800)] for k in vectors]).transpose()
 # matrix = np.matrix(subtracted_vectors).transpose()
 
 u,s,v = svd(matrix, full_matrices=False)
@@ -133,7 +140,7 @@ j = 0
 for vector in u.transpose().tolist()[1:2]:
 	# print vector
 	# ax.plot(range(len(vectors)), [value+i for value in vector], "-")
-	x = q
+	x = q[20:-800]
 	ax2.plot(x, [value for value in vector], "-") #color="#60BD68"
 	j+=0.3
 ax2.yaxis.set_ticks_position('left') # this one is optional but I still recommend it...
@@ -180,9 +187,8 @@ for index, temp in enumerate(STATIC_TEMPS):
 	std_value = np.std(v.tolist()[1][index*len(STATIC_REPS):index*len(STATIC_REPS)+len(STATIC_REPS)])
 	y.append(average_value)
 	y_weight.append(1/std_value)
-ax4.plot(x,y)
+ax4.plot(x,y, ".")
 
-# plt.show()
 
 m,n,b = np.polyfit(x,y,2, w=y_weight)
 print m, n, b
@@ -194,26 +200,29 @@ print m1, b1
 
 ax4.plot(x,[m1*i+b1 for i in x])
 fig4.savefig("temperature_fits.png")
-# plt.show()
 
-ons = []
-offs = []	
-for index,_ in enumerate(TIMES[1:-12]):
-	offset = index+1
+
+for experiment, _ in enumerate(TR_DIRECTORIES):
+	print TR_DIRECTORIES[experiment]
+	ons = []
+	offs = []	
+	start = len(STATIC_REPS)*len(STATIC_TEMPS)+sum([i for position, i in enumerate(lengths) if position < experiment])
+	print "start"
+	print start
 	total = len(TIMES)
-	start = len(STATIC_REPS)*len(STATIC_TEMPS)
+	for index,_ in enumerate(TIMES[1:]):
+		offset = index+1		
+		for rep in range(len(REPS)):
+			ons.append(v.tolist()[1][start+rep*total*2+offset*2+1])
+			offs.append(v.tolist()[1][start+rep*total*2+offset*2])
 
-	for rep in range(len(REPS)):
-		ons.append(v.tolist()[1][start+rep*total*2+offset*2+1])
-		offs.append(v.tolist()[1][start+rep*total*2+offset*2])
+	on_mean = np.mean(ons)
+	print "checking ons"
+	print np.roots([m,n,b-on_mean])
 
-on_mean = np.mean(ons)
-print "checking ons"
-print min(np.roots([m,n,b-on_mean]))
-
-off_mean = np.mean(offs)
-print "checking offs"
-print min(np.roots([m,n,b-off_mean]))
+	off_mean = np.mean(offs)
+	print "checking offs"
+	print np.roots([m,n,b-off_mean])
 
 
 # on_temp = (np.mean(ons)-b)/m
