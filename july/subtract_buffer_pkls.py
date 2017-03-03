@@ -5,24 +5,24 @@ import numpy as np
 import pickle as pkl
 
 # WT_filename = "WT_HD_protein.pkl"
-WT_filename = "WT_protein_iso.pkl"
+WT_filename = "WT_protein.pkl"
 with open(WT_filename, "rb") as pklfile:
   WT_protein = pkl.load(pklfile)
 
 # Mut_filename = "S99T_HD_protein.pkl"
-Mut_filename = "S99T_protein_iso.pkl"
+Mut_filename = "S99T_protein.pkl"
 with open(Mut_filename, "rb") as pklfile:
   Mut_protein = pkl.load(pklfile)
 
 
 # WT_buffer_filename = "WT_HD_buffer.pkl"
-WT_buffer_filename = "WT_buffer_iso.pkl"
+WT_buffer_filename = "WT_buffer.pkl"
 with open(WT_buffer_filename, "rb") as pklfile:
   WT_buffer = pkl.load(pklfile)
 
 
 # Mut_buffer_filename = "S99T_HD_buffer.pkl"
-Mut_buffer_filename = "S99T_buffer_chi.pkl"
+Mut_buffer_filename = "S99T_buffer.pkl"
 with open(Mut_buffer_filename, "rb") as pklfile:
   Mut_buffer = pkl.load(pklfile)
 
@@ -102,11 +102,11 @@ fig2,ax2 = plt.subplots()
 ax2.set_title("Integrated AUC", y=1.05)
 # integrated_AUCs = [-1*sum(WT)]
 WT_integrated = [-1*sum(WT_subtracted[i][1][4:17])*.0025 for i in range(1,len(times_numeric))]
-WT_integrated_errors=[-1* np.sqrt(sum([k**2 for k in WT_subtracted[i][2][2:17]]))*.0025 for i in range(1,len(times_numeric))]
+WT_integrated_errors=[-1* np.sqrt(sum([k**2 for k in WT_subtracted[i][2][4:17]]))*.0025 for i in range(1,len(times_numeric))]
 ax2.errorbar(times_numeric[1:], WT_integrated, fmt=".", yerr=WT_integrated_errors, label="WT AUC", color = "#5DA5DA")
 
 Mut_integrated = [-1*sum(Mut_subtracted[i][1][4:17])*.0025 for i in range(1,len(times_numeric))]
-Mut_integrated_errors=[-1* np.sqrt(sum([k**2 for k in Mut_subtracted[i][2][2:17]]))*.0025 for i in range(1,len(times_numeric))]
+Mut_integrated_errors=[-1* np.sqrt(sum([k**2 for k in Mut_subtracted[i][2][4:17]]))*.0025 for i in range(1,len(times_numeric))]
 ax2.errorbar(times_numeric[1:], Mut_integrated, fmt=".", yerr=Mut_integrated_errors, label="S99T AUC", color = "#FAA43A")
 
 # # ax2.plot(times_numeric, [-1*sum(subtracted_dict[i][1][13:33]) for i in range(1,len(TIMES))], color="red", label="Integrated AUC from 0.05 to 0.1")

@@ -8,25 +8,25 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pickle as pkl
 
-MAX_RANGE_MIN = -6
-MAX_RANGE_MAX = -3
-TEST_RANGE_MIN = 10
-TEST_RANGE_MAX = 21
-FIGURE_FILENAME = "WT_0C_Best_fit.png"
+MAX_RANGE_MIN = -8
+MAX_RANGE_MAX = -4
+TEST_RANGE_MIN = 9
+TEST_RANGE_MAX = 19
+FIGURE_FILENAME = "WT_14C_Best_fit.png"
 
 # WT_filename = "WT_HD_protein.pkl"
-WT_filename = "WT_0C_protein.pkl"
+WT_filename = "WT_protein.pkl"
 with open(WT_filename, "rb") as pklfile:
   WT_protein = pkl.load(pklfile)
 
 # # Mut_filename = "S99T_HD_protein.pkl"
-Mut_filename = "S99T_protein.pkl"
+Mut_filename = "WT_protein.pkl"
 # with open(Mut_filename, "rb") as pklfile:
 #   Mut_protein = pkl.load(pklfile)
 
 
 # WT_buffer_filename = "WT_HD_buffer.pkl"
-WT_buffer_filename = "WT_0C_buffer.pkl"
+WT_buffer_filename = "WT_buffer.pkl"
 with open(WT_buffer_filename, "rb") as pklfile:
   WT_buffer = pkl.load(pklfile)
 
@@ -244,7 +244,7 @@ ax2.set_xlim(500, 2000000)
 
 # integrated_AUCs = [-1*sum(WT)]
 WT_integrated = [-1*sum(WT_subtracted[i][1][4:17])*.0025 for i in range(1,len(times_numeric))]
-WT_integrated_errors=[np.sqrt(sum([k**2 for k in WT_subtracted[i][2][4:17]]))*.0025 for i in range(1,len(times_numeric))]
+WT_integrated_errors=[-1* np.sqrt(sum([k**2 for k in WT_subtracted[i][2][4:17]]))*.0025 for i in range(1,len(times_numeric))]
 WT = ax2.errorbar(times_numeric[1:], WT_integrated, fmt=".", yerr=WT_integrated_errors, label="Integrated Scattering", color = "#5DA5DA")
 ax2.legend(loc='upper left', fontsize="x-small", ncol=1, framealpha=0.8)
 fig2.savefig("-5C_integrated.png")
@@ -292,10 +292,10 @@ fig2.savefig("-5C_integrated.png")
 
 
 DI_max = np.mean(WT_integrated[MAX_RANGE_MIN:MAX_RANGE_MAX])
-# DI_min = np.mean(WT_integrated[11:15]) 
+# DI_min = np.mean(WT_integrated[MAX_RANGE_MIN:MAX_RANGE_MAX]) 
 DI_t = [np.fabs(DI_max-i) for i in WT_integrated]
-DI_0 = DI_max - min(WT_integrated[5:-5])
-# DI_0 = DI_max - WT_integrated[9]
+DI_0 = DI_max - min(WT_integrated)
+# DI_0 = max(WT_integrated) - DI_min
 # print DI_0
 y = [i/DI_0 for i in DI_t]
 # print y

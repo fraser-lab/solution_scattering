@@ -13,11 +13,11 @@ from numpy.linalg import svd
 """Statics"""
 TEMPS = ["14C"]
 TIMES = [ "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us", "316us", "422us", "562us", "750us", "1ms"] # 
-# MEGAREPS = 2 # "-10.1us",
-REPS = range(5,50)
+# MEGAREPS = 2 #"-10.1us",
+REPS = range(5,50) 
 # PREFIX = "CypA-6"
 # PREFIX = "CypA-5"
-PREFIX = "CypA-WT-1"
+PREFIX = "CypA-1"
 
 from parse import parse_tpkl, alg_scale
 
@@ -27,7 +27,7 @@ directories = argv[1:]
 # files = []
 vectors = []
 subtracted_vectors = []	
-reference = parse_tpkl("/Volumes/DatumsDepot/2016/Mike/APS_20160701/July_Beamline_Trip/Analysis/common/integration/CypA-S99T/CypA-S99T-Buffer-2/xray_images/CypA-S99T-Buffer-2_17_-10us-14_on.tpkl")
+reference = parse_tpkl("/Volumes/DatumsDepot/2016/mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-1/xray_images/CypA-Buffer-1_19_-10.1us.tpkl")
 
 for directory in directories:
 	# files = listdir(directory)
@@ -40,7 +40,7 @@ for directory in directories:
 					# onstring = subprocess.check_output("grep {0}_{1}_{2}_{3}_on beamstop-1.log".format(PREFIX, temp, i+1, time), shell=True)
 					# onscale = int(onstring.split()[3])
 					# on = parse_tpkl("{0}/{1}_{2}_{3}_{4}_on.tpkl".format(directory, PREFIX, temp, i+1, time)).apply_i0_scaling(onscale)[80:]
-					on_string = "{0}/{1}_{2}_{3}_on.tpkl".format(directory, PREFIX, i+1, time)
+					on_string = "{0}/{1}_{2}_{3}.tpkl".format(directory, PREFIX, i+1, time)
 					on = parse_tpkl(on_string)
 					on_scaled = alg_scale(reference, on)[0]
 					# on_scaled = on.as_vector()
@@ -51,7 +51,7 @@ for directory in directories:
 					# offstring = subprocess.check_output("grep {0}_{1}_{2}_{3}_off beamstop-1.log".format(PREFIX, temp, i+1, time), shell=True)
 					# offscale = int(offstring.split()[3])
 					# off = parse_tpkl("{0}/{1}_{2}_{3}_{4}_off.tpkl".format(directory, PREFIX, temp, i+1, time)).apply_i0_scaling(offscale)[80:]
-					off_string = "{0}/{1}_{2}_-10us{3}_on.tpkl".format(directory, PREFIX, i+1, off_count)
+					off_string = "{0}/{1}_{2}_-10us{3}.tpkl".format(directory, PREFIX, i+1, off_count)
 					off = parse_tpkl(off_string)
 					off_scaled = alg_scale(reference, off)[0]
 					# off_scaled=off.as_vector()
@@ -67,7 +67,7 @@ for directory in directories:
 				except:
 					pass
 					print "one or both of the on/off pairs was tossed:"
-					print "{0}/{1}_{2}_{3}_{4}_off.tpkl".format(directory, PREFIX, temp, i+1, time)
+					print "{0}/{1}_{2}_{3}_on.tpkl".format(directory, PREFIX, i+1, time)
 			
 # print files
 
@@ -122,11 +122,11 @@ std_off = np.std(zero_vector_values_off)
 print average_on, average_off, std_on, std_off
 for index, value in enumerate(v.tolist()[0]):
 	if index % 2 == 0:
-		if np.fabs((value - average_off) / std_off) > 2.5:
+		if math.fabs((value - average_off) / std_off) > 2.5:
 			print vectors[index][1]
 			print vectors[index][2]
 	elif index % 2 == 1:
-		if np.fabs((value - average_on) / std_on) > 2.5:
+		if math.fabs((value - average_on) / std_on) > 2.5:
 			print vectors[index][1]
 			print vectors[index][2]
 
@@ -135,25 +135,6 @@ for index, value in enumerate(v.tolist()[0]):
 fig3, ax3= plt.subplots()
 ax3.plot([np.log(i) for i in s][0:10], "-")
 fig3.savefig("Singular_values_WT_HD_Unscaled.png")
-
-fig4, ax4 = plt.subplots()
-ax4.axhline(average_on+2.5*std_on)
-ax4.axhline(average_on-2.5*std_on)
-ax4.axhline(average_on, color="0.5")
-ax4.plot(zero_vector_values_on)
-fig4.savefig("On_vectors.png")
-ax4.cla()
-ax4.axhline(average_off+2.5*std_off)
-ax4.axhline(average_off-2.5*std_off)
-ax4.axhline(average_off, color="0.5")
-ax4.plot(zero_vector_values_off)
-fig4.savefig("Off_vectors.png")
-ax4.cla()
-ax4.axhline(average_off+2.5*std_off)
-ax4.axhline(average_off-2.5*std_off)
-ax4.axhline(average_off, color="0.5")
-ax4.plot(v.tolist()[0])
-fig4.savefig("All_vectors_off_lines.png")
 
 # plt.show()
 

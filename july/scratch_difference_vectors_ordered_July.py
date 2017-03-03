@@ -19,7 +19,7 @@ MEGAREPS = 2
 REPS = 21
 # PREFIX = "CypA-6"
 # PREFIX = "CypA-5"
-PREFIX = "CypA-S99T-1"
+PREFIX = "CypA-S99T-2"
 
 from parse import parse_tpkl, alg_scale
 
@@ -129,11 +129,11 @@ std_off = np.std(zero_vector_values_off)
 print average_on, average_off, std_on, std_off
 for index, value in enumerate(v.tolist()[0]):
 	if index % 2 == 0:
-		if ((value - average_off) / std_off) > 2.5:
+		if math.abs((value - average_off) / std_off) > 2.5:
 			print vectors[index][1]
 			print vectors[index][2]
 	elif index % 2 == 1:
-		if ((value - average_on) / std_on) > 2.5:
+		if math.abs((value - average_on) / std_on) > 2.5:
 			print vectors[index][1]
 			print vectors[index][2]
 

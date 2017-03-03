@@ -26,16 +26,16 @@ TIMES = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16
 REPS = range(5,45)
 # PREFIX = "CypA-6"
 # PREFIX = "CypA-5"
-PREFIX = "CypA-S99T-2"
-PKL_FILENAME = "S99T_protein_iso.pkl"
-DATFILE_PREFIX = "S99T_buffer"
+PREFIX = "CypA-WT-1"
+PKL_FILENAME = "WT_protein.pkl"
+# DATFILE_PREFIX = "S99T_buffer"
 
 from parse import parse_tpkl, alg_scale, lin_regress_scale
 
 
 length = 0
 directories = argv[1:]
-reference = parse_tpkl("/Users/benjaminbarad/Desktop/July_Trip_Data/CypA-S99T/CypA-S99T-Buffer-2/xray_images/CypA-S99T-Buffer-2_17_-10us-14_on.tpkl")
+reference = parse_tpkl("/Volumes/DatumsDepot/2016/Mike/APS_20160701/July_Beamline_Trip/Analysis/common/integration/CypA-S99T/CypA-S99T-Buffer-2/xray_images/CypA-S99T-Buffer-2_17_-10us-14_on.tpkl")
 # reference = parse_tpkl("/Volumes/BAB_AGORA/July_Beamline_Trip/Analysis/common/integration/CypA-S99T/CypA-S99T-Buffer-2/xray_images/CypA-S99T-Buffer-2_17_-10us-14_on.tpkl")
 # fig,ax = plt.subplots()
 # files = []

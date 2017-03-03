@@ -43,9 +43,9 @@ def alg_scale(ref, var):
 	# print q
 	# return SA_var
 	# top = sum([SA_ref[i]*Q[i]*SA_var[i]*Q[i] for i in range(len(SA_ref))])
-	top = sum([SA_ref[i]*ref.q[i]*SA_var[i]*ref.q[i] for i in range(512, 593)]) #
+	top = sum([SA_ref[i]*ref.q[i]*SA_var[i]*ref.q[i] for i in range(1793, 2074)]) #
 	# bottom = sum([(SA_var[i]*Q[i])**2 for i in range(len(SA_var))])
-	bottom = sum([(SA_var[i]*ref.q[i])**2 for i in range(512, 593)]) # 552,633
+	bottom = sum([(SA_var[i]*ref.q[i])**2 for i in range(1793, 2074)]) # 552,633
 	scalar = top/bottom
 	print "scalar: ", scalar
 	SA_adjusted = [i*scalar for i in SA_var]
@@ -55,7 +55,7 @@ def alg_scale(ref, var):
 
 def lin_regress_scale(ref, var):
 	## Performs like algebraic scaling but trains on a much larger q range so alg_scale is preferable.
-	slope = stats.linregress([ref.SA[i]*ref.q[i] for i in range(512,593)], [var.SA[i]*ref.q[i] for i in range(512, 593)])[0]
+	slope = stats.linregress([ref.SA[i]*ref.q[i] for i in range(1793, 2074)], [var.SA[i]*ref.q[i] for i in range(1793, 2074)])[0]
 	print slope
 	var.SA_adjusted = [i/slope for i in var.SA]
 	var.sigSA_adjusted = [i/slope for i in var.sigSA]

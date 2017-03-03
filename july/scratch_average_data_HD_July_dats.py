@@ -1,4 +1,5 @@
 import csv
+from os import listdir
 from sys import argv
 import pickle as pkl
 import subprocess
@@ -22,12 +23,12 @@ TIMES = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16
 # TIMES = ["-10.1us"]
 # TIMES = ["-10us",  "10ns", "17.8ns", "31.6ns", "56.2ns", "75ns", "100ns", "133ns", "178ns", "316ns", "562ns", "1us", "1.78us", "3.16us", "5.62us", "10us", "17.8us", "31.6us", "56.2us", "100us", "178us", "316us", "562us", "1ms", "1.78ms", "3.16ms", "5.62ms", "10ms"] # 
 # MEGAREPS = 2
-REPS = range(5,50)
+REPS = range(5,25)
 # PREFIX = "CypA-6"
 # PREFIX = "CypA-5"
-PREFIX = "CypA-WT-1"
-PKL_FILENAME = "S99T_proten_chi.pkl"
-DATFILE_PREFIX = "WT_protein"
+PREFIX = "CypA-WT-Buffer-1"
+PKL_FILENAME = "S99T_protein_chi.pkl"
+DATFILE_PREFIX = "WT_buffer"
 
 
 from parse import parse_tpkl, alg_scale, lin_regress_scale
@@ -35,7 +36,7 @@ from parse import parse_tpkl, alg_scale, lin_regress_scale
 
 length = 0
 directories = argv[1:]
-reference = parse_tpkl("/Users/benjaminbarad/Desktop/July_Trip_Data/CypA-S99T/CypA-S99T-Buffer-2/xray_images/CypA-S99T-Buffer-2_17_-10us-14_on.tpkl")
+reference = parse_tpkl("/Volumes/DatumsDepot/2016/Mike/APS_20160701/July_Beamline_Trip/Analysis/common/integration/CypA-S99T/CypA-S99T-Buffer-2/xray_images/CypA-S99T-Buffer-2_17_-10us-14_on.tpkl")
 # reference = parse_tpkl("/Volumes/BAB_AGORA/July_Beamline_Trip/Analysis/common/integration/CypA-S99T/CypA-S99T-Buffer-2/xray_images/CypA-S99T-Buffer-2_17_-10us-14_on.tpkl")
 # fig,ax = plt.subplots()
 # files = []
@@ -182,7 +183,6 @@ def combine_off_vectors(free_off_vectors):
 		combined_off_vector.append((avg_mean_off, std_tot_off))
 	return combined_off_vector
 
-for vectors in free_off_vectors:
 
 averaged_off_vector = combine_off_vectors(free_off_vectors)
 print averaged_off_vector
@@ -201,7 +201,7 @@ def make_dats(on_vectors, averaged_off_vector):
 	# Ons
 	for index,time in enumerate(TIMES):
 		vector = on_vectors[index][1]
-		with open("datfiles/{}_{}_on.dat".format(DATFILE_PREFIX, time), "wb") as dat_file:
+		with open("datfiles/{}_{}_subtracted.dat".format(DATFILE_PREFIX, time), "wb") as dat_file:
 			for i in range(len(vector)):
 				dat_file.write("{} {} {}\n".format(on.q[i], vector[i][0], vector[i][1]))
 	
@@ -212,4 +212,4 @@ plt.legend(plots, loc='upper center', bbox_to_anchor=(0.5, 1.25),
           ncol=3, fancybox=True, shadow=True)
 plt.show()
 # make_pkl(averaged_vectors)
-# make_dats(averaged_on_vectors, averaged_off_vector)
+make_dats(averaged_vectors, averaged_off_vector)
