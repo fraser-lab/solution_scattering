@@ -3,7 +3,7 @@ making traces.
 
 Benjamin Barad
 """
-from numpy import recarray, load
+from numpy import load
 from scipy import stats
 from trace import Trace
 
@@ -18,15 +18,8 @@ def parse(filename, mode="tpkl"):
 		return parse_tpkl(filename)
 
 def parse_tpkl(filename):
-	"""Loads tpkl files and generates a corresponding Trace object. Requires
-	table.py from the Anfinrud lab, which we will not distribute.
-	"""
-	try:
-		from table import table
-	except ImportError:
-		print """You do not have the required code accessible to parse tpkl
-		files. Try using a different file format for input"""
-		raise
+	"""Loads tpkl files and generates a corresponding Trace object."""
+
 	data = load(filename)
 	q = data.q
 	sigS = data.sigS
