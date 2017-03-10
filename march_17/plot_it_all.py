@@ -12,10 +12,10 @@ MAX_RANGE_MIN = -7
 MAX_RANGE_MAX = -4
 TEST_RANGE_MIN = 9
 TEST_RANGE_MAX = 19
-FIGURE_FILENAME = "WT_13C_Comparison.png"
+FIGURE_FILENAME = "WT_8C_Comparison.png"
 
 # WT_filename = "WT_HD_protein.pkl"
-WT_filename = "WT_13C_protein.pkl"
+WT_filename = "NH_13C_protein.pkl"
 with open(WT_filename, "rb") as pklfile:
   WT_protein = pkl.load(pklfile)
 
@@ -41,8 +41,8 @@ WT_subtracted = []
 # Mut_subtracted = []
 # double_subtracted = []
 
-scale_factor = 0.97
-mut_scale_factor = 0.92
+scale_factor = 1
+mut_scale_factor = 1
 variant = "WT"
 time = "10us"
 TIMES = ["-10.1us", "1us", "3.16us", "10us", "31.6us", "100us", "316us", "1ms"] # 
@@ -79,7 +79,7 @@ fig, ax = plt.subplots()
 ax.set_title("Buffer-subtracted Difference Scattering", y=1.05)
 ax.set_xscale("log", nonposx='clip')
 ax.legend(loc='lower right', ncol=4, fontsize="x-small", framealpha=0.8)
-ax.set_ylabel(r"$\Delta\Delta I$ (a.u.)")
+ax.set_ylabel(r"$\Delta\Delta I \times q$ (a.u.)")
 ax.set_xlabel(r"q ($\AA^{-1}$)")
 ax.yaxis.set_ticks_position('none') # this one is optional but I still recommend it...
 ax.xaxis.set_ticks_position('none')
@@ -87,10 +87,12 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 ax.get_xaxis().tick_bottom()
 ax.get_yaxis().tick_left()
-ax.set_xlim(0.03,5.3275)
-ax.set_ylim(-250, 50)
-ax.set_xticks([0.03,0.1,1,5])
-ax.set_xticklabels([0.03,0.1,1,5])
+
+# ax.set_ylim(-250, 50)
+ax.set_xlim(0.03,.3) # 5.3275
+ax.set_xticks([0.03,0.1]) #,1,5
+ax.set_xticklabels([0.03,0.1]) #,1,5
+
 
 # fig4, ax4 = plt.subplots()
 # fig5, ax5 = plt.subplots()
@@ -148,30 +150,18 @@ for index, value in enumerate(WT_protein):
   WT_means = [WT_protein[index][1][k][0]-(WT_buffer[index][1][k][0]*scale_factor) for k in range(len(WT_protein[index][1]))]
   WT_stds = [np.sqrt(WT_protein[index][1][k][1]**2+(WT_buffer[index][1][k][1]*scale_factor)**2) for k in range(len(WT_protein[index][1]))]
   WT_subtracted.append((value[0], WT_means, WT_stds)) # 
-  ##
-  # Mut_means = [Mut_protein[index][1][k][0]-(Mut_buffer[index][1][k][0]*mut_scale_factor) for k in range(len(Mut_protein[index][1]))]
-  # Mut_stds = [np.sqrt(Mut_protein[index][1][k][1]**2+(Mut_buffer[index][1][k][1]*mut_scale_factor)**2) for k in range(len(Mut_protein[index][1]))]
-  # Mut_subtracted.append((value[0], Mut_means, Mut_stds)) 
-  # ## 
-  # subtracted_means = [WT_means[i] - Mut_means[i] for i,_ in enumerate(Mut_means)]
-  # subtracted_stds = [np.sqrt(Mut_stds[i]**2+WT_stds[i]**2) for i,_ in enumerate(Mut_stds)]
-  # double_subtracted.append((value[0], subtracted_means, subtracted_stds))
+
   if value[0] == time:
     ax6.plot(q, WT_means, label=value[0], color = "#5DA5DA")
     ax6.legend(fontsize="x-small")
     fig6.savefig("Double_subtraction_one_time.png")
   if value[0] in TIMES:
-    ax.plot(q, WT_means,  label=value[0]) #yerr=WT_stds,
-    # ax4.plot(q, Mut_means,  label=value[0]) #yerr=WT_stds,
-    # ax5.plot(q, subtracted_means,  label=value[0]) #yerr=WT_stds,
-  # ax4.plot(q, Mut_means,  label=value[0]) #yerr=Mut_stds,
-  # ax5.plot(q, subtracted_means,  label=value[0]) #yerr=subtracted_stds,
-  # ax.plot(q, WT_means, label=value[0])
-  # ax.plot(sample_table.index.values, [i*q for i,q in zip(((sample_table_2[time]-buffer_table_2[time])-(sample_table[time] - buffer_table[time])),sample_table.index.values)], label=time) # 
+    ax.plot(q, [q[i]*WT_means[i] for i, _ in enumerate(q)],  label=value[0]) #yerr=WT_stds,
+
 ax.legend(loc='lower right', ncol=4, fontsize="x-small", framealpha=0.8)
 # ax4.legend(loc='lower right', ncol=4, fontsize="x-small", framealpha=0.8)
 # ax5.legend(loc='lower right', ncol=4, fontsize="x-small", framealpha=0.8)
-fig.savefig("WT_double_differences.png")
+fig.savefig("WT_16C_double_differences.png")
 plt.clf()
 # fig4.savefig("Mut_double_differences.png")
 # fig5.savefig("Triple_differences.png")
@@ -214,7 +204,7 @@ for time in zip(*WT_protein)[0]:
 # print times_numeric
 
 fig2,ax2 = plt.subplots()
-ax2.set_title("Integrated Area of Guinier Region", y=1.05)
+ax2.set_title("Integrated Area of Interesting Region", y=1.05)
 ax2.set_xlabel("Time (ns)")
 ax2.set_xscale("log", nonposx='clip')
 ax2.set_ylabel("Area (q=0.03-0.06)")
@@ -243,11 +233,11 @@ ax2.set_xlim(500, 2000000)
 
 
 # integrated_AUCs = [-1*sum(WT)]
-WT_integrated = [-1*sum(WT_subtracted[i][1][4:17])*.0025 for i in range(1,len(times_numeric))]
-WT_integrated_errors=[np.sqrt(sum([k**2 for k in WT_subtracted[i][2][4:17]]))*.0025 for i in range(1,len(times_numeric))]
+WT_integrated = [-1*sum(WT_subtracted[i][1][2:13])*.0025 for i in range(1,len(times_numeric))]
+WT_integrated_errors=[np.sqrt(sum([k**2 for k in WT_subtracted[i][2][2:13]]))*.0025 for i in range(1,len(times_numeric))]
 WT = ax2.errorbar(times_numeric[1:], WT_integrated, fmt=".", yerr=WT_integrated_errors, label="Integrated Scattering", color = "#5DA5DA")
 ax2.legend(loc='upper left', fontsize="x-small", ncol=1, framealpha=0.8)
-fig2.savefig("WT_integrated.png")
+fig2.savefig("H_13C_integrated_higher_angle.png")
 # print "---"
 # print WT_integrated
 # print "---"

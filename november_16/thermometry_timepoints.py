@@ -15,24 +15,24 @@ TEMPS = ["5C"]
 TIMES = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us",  "133us", "178us", "237us", "316us", "422us", "562us", "750us", "1ms"] # 
 # TIMES = ["-10.1us", "562ns", "1us", "1.78us", "3.16us", "5.62us", "10us", "17.8us", "31.6us", "56.2us", "100us", "178us", "316us", "562us", "1ms"]
 STATIC_REPS = range(32)
-STATIC_TEMPS = [-5,0,5,7,10,12,14,17,22,26] 
+STATIC_TEMPS = [3, 8, 13, 18, 23, 28] 
 # STATIC_TEMPS = [14,21,28]
-REPS = range(5,25)
+REPS = range(5,40)
 # PREFIX = "CypA-6"
 # PREFIX = "CypA-5"
-TR_DIRECTORIES = ["/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-1/xray_images", "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-2/xray_images", "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-4/xray_images",  "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-5/xray_images", "/Volumes/DatumsDepot/2016/Mike/APS_20160701/July_Beamline_Trip/Analysis/common/integration/CypA-WT/CypA-WT-Buffer-1/xray_images"] 
-TR_PREFIXES = ["CypA-Buffer-1", "CypA-Buffer-2", "CypA-Buffer-4", "CypA-Buffer-5", "CypA-WT-Buffer-1"]
+TR_DIRECTORIES = ["/Volumes/OR_Trail/170302_APS/CypA-NH-Buffer-1/xray_images", "/Volumes/OR_Trail/170302_APS/CypA-WT-Buffer-1/xray_images"] 
+TR_PREFIXES = ["CypA-NH-Buffer-1", "CypA-WT-Buffer-1"]
 # TR_DIRECTORIES = ["/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-1/xray_images"]
 # TR_PREFIXES = ["CypA-Buffer-1"]
 assert len(TR_PREFIXES) == len(TR_DIRECTORIES)
 # PREFIX = "CypA-WT-Buffer-1"
-STATIC_PREFIX = "CypA-ConcTemp-1_offBT"
+STATIC_PREFIX = "CypA-NH-Buffer-static-1_offBT"
 # STATIC_PREFIX = "CypA-WT-static-1_offBT"
 from parse import parse_tpkl, alg_scale
 
 length = 0
 static_directory = argv[1]
-tr_directories = argv[2:]
+# tr_directories = argv[2:]
 # DIRECTORY_PREFIX = "/Volumes/DatumsDepot/2016/mike/APS_20161110/Analysis/WAXS/common/integration/CypA/"
 
 
@@ -41,7 +41,7 @@ tr_directories = argv[2:]
 vectors = []
 subtracted_vectors = []	
 
-reference = parse_tpkl("/Volumes/DatumsDepot/2016/mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-1/xray_images/CypA-Buffer-1_19_-10.1us.tpkl")
+reference = parse_tpkl("/Volumes/OR_Trail/170302_APS/CypA-NH-Buffer-1/xray_images/CypA-NH-Buffer-1_17_-10us-10.tpkl")
 
 
 
@@ -139,11 +139,11 @@ fig.savefig("timepoints.png")
 fig2, ax2 = plt.subplots()
 j = 0
 
-for vector in u.transpose().tolist()[1:2]:
+for index, vector in enumerate(u.transpose().tolist()[1:2]):
 	# print vector
 	# ax.plot(range(len(vectors)), [value+i for value in vector], "-")
 	x = q[20:-800]
-	ax2.plot(x, [value for value in vector], "-") #color="#60BD68"
+	ax2.plot(x, [value/value1 for value, value1 in vector, u.transpose().to_list()[index]], "-") #color="#60BD68"
 	j+=0.3
 ax2.yaxis.set_ticks_position('left') # this one is optional but I still recommend it...
 ax2.xaxis.set_ticks_position('bottom')

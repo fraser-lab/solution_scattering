@@ -3,7 +3,7 @@ making traces.
 
 Benjamin Barad
 """
-from numpy import recarray, load
+from numpy import load
 from scipy import stats
 from trace import Trace
 
@@ -21,12 +21,6 @@ def parse_tpkl(filename):
 	"""Loads tpkl files and generates a corresponding Trace object. Requires
 	table.py from the Anfinrud lab, which we will not distribute.
 	"""
-	try:
-		from table import table
-	except ImportError:
-		print """You do not have the required code accessible to parse tpkl
-		files. Try using a different file format for input"""
-		raise
 	data = load(filename)
 	q = data.q
 	sigS = data.sigS
@@ -43,9 +37,9 @@ def alg_scale(ref, var):
 	# print q
 	# return SA_var
 	# top = sum([SA_ref[i]*Q[i]*SA_var[i]*Q[i] for i in range(len(SA_ref))])
-	top = sum([SA_ref[i]*ref.q[i]*SA_var[i]*ref.q[i] for i in range(1793, 2069)]) # 2074 previously!
+	top = sum([SA_ref[i]*ref.q[i]*SA_var[i]*ref.q[i] for i in range(len(ref.q))]) # 2074 previously!
 	# bottom = sum([(SA_var[i]*Q[i])**2 for i in range(len(SA_var))])
-	bottom = sum([(SA_var[i]*ref.q[i])**2 for i in range(1793, 2069)]) # 552,633 # 2074 previously!
+	bottom = sum([(SA_var[i]*ref.q[i])**2 for i in range(len(ref.q))]) # 552,633 # 2074 previously!
 	scalar = top/bottom
 	print "scalar: ", scalar
 	SA_adjusted = [i*scalar for i in SA_var]
