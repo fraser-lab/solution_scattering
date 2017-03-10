@@ -14,10 +14,10 @@ from numpy.linalg import svd
 TEMPS = ["14C"]
 TIMES = [ "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us", "316us", "422us", "562us", "750us", "1ms"] # 
 # MEGAREPS = 2 # "-10.1us",
-REPS = range(0,40)
+REPS = range(5,50)
 # PREFIX = "CypA-6"
 # PREFIX = "CypA-5"
-PREFIX = "CypA_NH-Buffer-1"
+PREFIX = "CypA-WT-1"
 
 from parse import parse_tpkl, alg_scale
 
@@ -27,7 +27,7 @@ directories = argv[1:]
 # files = []
 vectors = []
 subtracted_vectors = []	
-reference = parse_tpkl("/Volumes/OR_Trail/170302_APS/CypA_NH-Buffer-1/xray_images/CypA_NH-Buffer-1_17_-10us-10.tpkl")
+reference = parse_tpkl("/Users/student/Desktop/cypa_waxs_data/170302_APS/CypA-WT-1/xray_images/CypA-WT-1_10_-10us-26.tpkl")
 
 for directory in directories:
 	# files = listdir(directory)

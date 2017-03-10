@@ -18,9 +18,7 @@ def parse(filename, mode="tpkl"):
 		return parse_tpkl(filename)
 
 def parse_tpkl(filename):
-	"""Loads tpkl files and generates a corresponding Trace object. Requires
-	table.py from the Anfinrud lab, which we will not distribute.
-	"""
+	"""Loads tpkl files and generates a corresponding Trace object."""
 	data = load(filename)
 	q = data.q
 	sigS = data.sigS

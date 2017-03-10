@@ -26,9 +26,11 @@ TIMES = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16
 REPS = range(5,50)
 # PREFIX = "CypA-6"
 # PREFIX = "CypA-5"
-PREFIX = "CypA-N-1"
-PKL_FILENAME = "N_13C_protein.pkl"
-DATFILE_PREFIX = "WT_13C_buffer"
+
+PREFIX = "CypA-WT-1"
+PKL_FILENAME = "WT_13C_protein.pkl"
+DATFILE_PREFIX = "WT_13C_protein"
+
 
 from parse import parse_tpkl, alg_scale, lin_regress_scale
 
