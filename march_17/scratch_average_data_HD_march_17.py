@@ -28,11 +28,11 @@ REPS = range(5,50)
 # PREFIX = "CypA-5"
 
 PREFIX = "CypA-WT-1"
-PKL_FILENAME = "WT_13C_protein.pkl"
-DATFILE_PREFIX = "WT_13C_protein"
+PKL_FILENAME = "WT_13C_protein_full_algebraic.pkl"
+DATFILE_PREFIX = "WT_13C_buffer"
 
 
-from parse import parse_tpkl, alg_scale, lin_regress_scale
+from parse import parse_tpkl, alg_scale, lin_regress_scale, integration_scale
 
 
 length = 0
@@ -43,6 +43,7 @@ reference = parse_tpkl("/Users/benjaminbarad/Documents/170302_APS/CypA-NH-Buffer
 # files = []
 all_vectors = []
 subtracted_vectors = {i: [] for i in TIMES}	
+fig1, ax1 = plt.subplots()
 for directory in directories:
 	# files = listdir(directory)
 	# for index, _ in enumerate()
@@ -55,6 +56,7 @@ for directory in directories:
 						# onstring = subprocess.check_output("grep {0}_{1}_{2}_{3}_on beamstop-1.log".format(PREFIX, temp, i+1, time), shell=True)
 						# onscale = int(onstring.split()[3])
 						on = parse_tpkl("{0}/{1}_{2}_{3}.tpkl".format(directory, PREFIX, i+1, time))
+						ax1.plot(on.q, on.as_vector())
 						on_scaled = alg_scale(reference, on)
 						# on_scaled = lin_regress_scale(reference, on)
 						# on_scaled = on.scale_isosbestic()[0]
@@ -80,6 +82,7 @@ for directory in directories:
 						pass
 						print "one or both of the on/off pairs was tossed:"
 						print "{0}/{1}_{2}_{3}.tpkl".format(directory, PREFIX, i+1, time)
+fig1.savefig("unscaled.png")
 
 def chisquared(var, ref):
 	nu = len(var)-1.0
