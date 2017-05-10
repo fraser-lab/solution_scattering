@@ -41,6 +41,7 @@ def parse_tpkl(filename):
 	return Trace(q, sigS, S, sigSA, SA, Nj)
 
 def alg_scale(ref, var):
+	"""Scale by projection of a vector onto a reference vector and determining the magnitude difference."""
 	SA_ref = ref.SA
 	SA_var = var.SA
 	# q = SA_ref.q
@@ -56,6 +57,18 @@ def alg_scale(ref, var):
 	sig_SA_adjusted = [i*scalar for i in var.sigSA]
 	return SA_adjusted, sig_SA_adjusted
 	# return var.SA, var.sigSA
+
+def integration_scale(ref, var):
+	"""Scale by the total number of scattered photons"""
+	SA_ref = ref.SA
+	SA_var = var.SA
+	top = sum([SA_ref[i]*ref.q[i] for i in range(len(ref.q))])
+	bottom =  sum([SA_var[i]*var.q[i] for i in range(len(var.q))])
+	scalar = top/bottom
+	print "scalar: ", scalar
+	SA_adjusted = [i*scalar for i in var.SA]
+	sig_SA_adjusted = [i*scalar for i in var.sigSA]
+	return SA_adjusted, sig_SA_adjusted
 
 def lin_regress_scale(ref, var):
 	## Performs like algebraic scaling but trains on a much larger q range so alg_scale is preferable.
