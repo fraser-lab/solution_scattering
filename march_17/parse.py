@@ -6,6 +6,7 @@ Benjamin Barad
 from numpy import load
 from scipy import stats
 from trace import Trace
+from pandas import read_table
 
 # Q = [0.0175 + 0.0025 * i for i in range(2125)]
 # print Q
@@ -16,6 +17,17 @@ def parse(filename, mode="tpkl"):
 	variable."""
 	if mode == "tpkl":
 		return parse_tpkl(filename)
+
+def parse_dat(filename):
+	data = read_table(filename, delimiter="    ", engine='python', skiprows=1, names=['q','I','sigI'])
+	q = data.q
+	SA = data.I
+	sigSA = data.sigI
+	return q,SA,sigSA
+	# sigS = data.sigI
+	# S = data.I
+	# Nj = data.q
+	# return Trace(q, sigS, S, sigSA, SA, Nj)
 
 def parse_tpkl(filename):
 	"""Loads tpkl files and generates a corresponding Trace object."""
