@@ -23,7 +23,7 @@ class Trace(object):
 	def scale_isosbestic(self):
 		Q = [0.0175 + 0.0025 * i for i in range(2125)]
 		scale = sum([self.SA[i]*Q[i] for i in range(583,603)])
-		print scale
+		print(scale)
 		self.scaled_SA = self.SA/scale
 		self.scaled_sigSA = self.sigSA/scale
 		return (self.scaled_SA, self.scaled_sigSA)

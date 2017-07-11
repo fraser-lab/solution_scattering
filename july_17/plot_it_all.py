@@ -14,10 +14,10 @@ MAX_RANGE_MIN = 12
 MAX_RANGE_MAX = 16
 TEST_RANGE_MIN = 1
 TEST_RANGE_MAX = 11
-FIGURE_FILENAME = "Trypsin-BA-1_subtracted_algebraic.png"
+FIGURE_FILENAME = "Trypsin-AEBSF-1_subtracted_algebraic_offs.png"
 
 # WT_filename = "WT_HD_protein.pkl"
-WT_filename = "Trypsin-BA-1_full_algebraic.pkl"
+WT_filename = "Trypsin-AEBSF-1_full_algebraic.pkl"
 with open(WT_filename, "rb") as pklfile:
   WT_protein = pkl.load(pklfile)
 
@@ -28,7 +28,7 @@ with open(WT_filename, "rb") as pklfile:
 
 
 # WT_buffer_filename = "WT_HD_buffer.pkl"
-WT_buffer_filename = "Trypsin-BA-Buffer-1_full_algebraic.pkl"
+WT_buffer_filename = "Trypsin-AEBSF-Buffer-1_full_algebraic.pkl"
 with open(WT_buffer_filename, "rb") as pklfile:
   WT_buffer = pkl.load(pklfile)
 

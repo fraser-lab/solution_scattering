@@ -1,12 +1,16 @@
+import plotly
+from plotly.graph_objs import Scatter, Layout
+
+
 import csv
 from os import listdir
 from sys import argv
 import pickle as pkl
 import subprocess
 
-import matplotlib
-matplotlib.use("MacOSX")
-from matplotlib import pyplot as plt
+# import matplotlib
+# matplotlib.use("MacOSX")
+# from matplotlib import pyplot as plt
 import numpy as np
 from numpy.linalg import svd
 
@@ -23,19 +27,19 @@ TIMES = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16
 # TIMES = ["-10.1us"]
 # TIMES = ["-10us",  "10ns", "17.8ns", "31.6ns", "56.2ns", "75ns", "100ns", "133ns", "178ns", "316ns", "562ns", "1us", "1.78us", "3.16us", "5.62us", "10us", "17.8us", "31.6us", "56.2us", "100us", "178us", "316us", "562us", "1ms", "1.78ms", "3.16ms", "5.62ms", "10ms"] # 
 # MEGAREPS = 2
-REPS = range(5,50)
+REPS = range(5,10)
 # PREFIX = "CypA-6"
 # PREFIX = "CypA-5"
 
 ### buffer
-PREFIX = "Trypsin-AEBSF-Buffer-1"
-PKL_FILENAME = "Trypsin-AEBSF-Buffer-1_full_algebraic.pkl"
-DATFILE_PREFIX = "Trypsin-AEBSF-Buffer-1"
+# PREFIX = "Trypsin-PABA-Buffer-1"
+# PKL_FILENAME = "Trypsin-PABA-Buffer-1_full_algebraic.pkl"
+# DATFILE_PREFIX = "Trypsin-PABA-Buffer-1"
 
 ### protein
-# PREFIX = "Trypsin-PABA-1"
-# PKL_FILENAME = "Trypsin-PABA-1_full_algebraic.pkl"
-# DATFILE_PREFIX = "Trypsin-PABA-1"
+PREFIX = "Trypsin-PABA-1"
+PKL_FILENAME = "Trypsin-PABA-1_full_algebraic.pkl"
+DATFILE_PREFIX = "Trypsin-PABA-1"
 
 
 from parse import parse_tpkl_2, alg_scale, lin_regress_scale, integration_scale
@@ -43,7 +47,7 @@ from parse import parse_tpkl_2, alg_scale, lin_regress_scale, integration_scale
 
 length = 0
 directories = argv[1:]
-reference = parse_tpkl_2("/Volumes/beryllium/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
+reference = parse_tpkl_2("/Volumes/LACIE_SHARE/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
 # reference = parse_tpkl("/Volumes/BAB_AGORA/July_Beamline_Trip/Analysis/common/integration/CypA-S99T/CypA-S99T-Buffer-2/xray_images/CypA-S99T-Buffer-2_17_-10us-14_on.tpkl")
 # fig,ax = plt.subplots()
 # files = []
@@ -88,7 +92,7 @@ for directory in directories:
                         pass
                         print "one or both of the on/off pairs was tossed:"
                         print "{0}/{1}_{2}_{3}.tpkl".format(directory, PREFIX, i+1, time)
-fig1.savefig("unscaled.png")
+# fig1.savefig("unscaled.png")
 
 def chisquared(var, ref):
     nu = len(var)-1.0
@@ -138,8 +142,8 @@ def combine_vectors_outliers(vectors):
 # exit()
 
 q = on.q
-fig, ax = plt.subplots()    
-plots = []
+# fig, ax = plt.subplots()    
+# plots = []
 averaged_vectors = []               
 for time in TIMES:
     print "===="
@@ -149,7 +153,7 @@ for time in TIMES:
     # outlier_list = chi_outliers(vectors, averaged_vector)
     # final_averaged = chi_outliers()
         # print on.q[i], np.mean(value_list), np.std(value_list)
-    plots.append(ax.errorbar(q, zip(*averaged_vector)[0], yerr=zip(*averaged_vector)[1], label=time)[0])
+    # plots.append(ax.errorbar(q, zip(*averaged_vector)[0], yerr=zip(*averaged_vector)[1], label=time)[0])
     averaged_vectors.append((time, averaged_vector))
     
 # with open("WT_HD_protein_onoff_stdevs.csv", 'wb') as csvfile:
@@ -166,9 +170,17 @@ def make_pkl(vectors):
 
 
 
-ax.set_xscale("log", nonposx='clip')
-# plt.legend(plots, loc='upper center', bbox_to_anchor=(0.5, 1.25),
-#           ncol=3, fancybox=True, shadow=True)
-plt.show()
-make_pkl(averaged_vectors)
+# ax.set_xscale("log", nonposx='clip')
+# # plt.legend(plots, loc='upper center', bbox_to_anchor=(0.5, 1.25),
+# #           ncol=3, fancybox=True, shadow=True)
+# plt.show()
+# make_pkl(averaged_vectors)
 # make_dats(averaged_vectors)
+
+plotly.offline.plot({
+    "data": [Scatter(x=averaged_vectors.q, y=averaged_vectors.SA)],
+    "layout": Layout(title="hello world")
+})
+
+# import plotly
+# plotly.__version__

@@ -17,7 +17,9 @@ TIMES = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16
 REPS = range(5,50)
 # PREFIX = "CypA-6"
 # PREFIX = "CypA-5"
-PREFIX = "Trypsin-BA-1"
+# PREFIX = "Trypsin-PABA-1"
+PREFIX = "Trypsin-AEBSF-Buffer-1"
+
 
 from parse import parse_tpkl_2, alg_scale
 
@@ -27,7 +29,7 @@ directories = argv[1:]
 # files = []
 vectors = []
 subtracted_vectors = []	
-reference = parse_tpkl_2("/Volumes/LACIE_SHARE/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
+reference = parse_tpkl_2("/Volumes/beryllium/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
 
 for directory in directories:
 	# files = listdir(directory)
