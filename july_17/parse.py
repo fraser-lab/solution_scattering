@@ -13,12 +13,12 @@ import numpy as np
 # print Q
 
 def parse(filename, mode="tpkl"):
-	"""Wrapper function for any loader functions that I may write besides 
-	tpkl. Just passes through to the appropriate place based on the `mode` 
-	variable."""
-	if mode == "tpkl":
-		return parse_tpkl_2(filename)
-    if mode == "dat":
+    """Wrapper function for any loader functions that I may write besides 
+    tpkl. Just passes through to the appropriate place based on the `mode` 
+    variable."""
+    if mode == "tpkl":
+        return parse_tpkl_2(filename)
+    elif mode == "dat":
         return parse_dat(filename)
 
 def parse_dat(filename):

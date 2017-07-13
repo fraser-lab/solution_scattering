@@ -71,7 +71,7 @@ for directory in directories:
 
                     on = parse_tpkl("{0}/{1}_{2}_{3}.tpkl".format(directory, PREFIX, i+1, time))
                     
-                    on_scaled = alg_scale(reference, on)
+                    on_scaled = on.alg_scale(reference)
                     # ax1.plot(on.q, on_scaled[0],c='r')
                     # on_scaled = lin_regress_scale(reference, on)
                     # on_scaled = on.scale_isosbestic()[0]
@@ -97,7 +97,7 @@ for directory in directories:
                         off_count = ""
 
                     off = parse_tpkl_2("{0}/{1}_{2}_{3}.tpkl".format(directory, PREFIX, i+1, time))
-                    off_scaled = alg_scale(reference, off)
+                    off_scaled = off.alg_scale(reference)
 
                 # except:
                 #     pass
