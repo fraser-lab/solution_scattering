@@ -16,6 +16,24 @@ def parse(filename, mode="tpkl"):
 	if mode == "tpkl":
 		return parse_tpkl(filename)
 
+
+def parse_tpkl_2(filename):
+    """Loads tpkl files and generates a corresponding Trace object.
+    """
+    TPKL_HEADER_BYTES = 279 ### this value could vary
+    f = open(filename, "rb")
+    dt = np.dtype({'names': ['q','S','sigS','SA','sigSA','Nj'],
+                'formats': ['<f8','<f8','<f8','<f8','<f8','<i8']})
+    f.seek(TPKL_HEADER_BYTES)
+    data = np.fromfile(f, dtype=dt)
+    q = data['q']
+    sigS = data['sigS']
+    S = data['S']
+    sigSA = data['sigSA']
+    SA = data['SA']
+    Nj = data['Nj']
+    return Trace(q, sigS, S, sigSA, SA, Nj)
+
 def parse_tpkl(filename):
 	"""Loads tpkl files and generates a corresponding Trace object. Requires
 	table.py from the Anfinrud lab, which we will not distribute.

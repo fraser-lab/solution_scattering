@@ -9,12 +9,18 @@ scratch.py
 *.log
 *.csv
 _data/
-*.png
 *.tpkl
 *.mrrc
 *.dat
 *.tar.gz
 *.pkl
+
+# Plots
+*.png
+*.html
+
+# Notebooks
+*.ipynb*
 
 # Respect the anfinrud lab's privacy!
 table.py
