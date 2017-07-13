@@ -30,9 +30,9 @@ REPS2 = range(5,50)
 # PREFIX = "CypA-5"
 
 ### buffer
-PREFIX = "Trypsin-APMSF-2"
+PREFIX = "Trypsin-APMSF-1"
 PKL_FILENAME = "Trypsin-APMSF-2_first-ten_full_algebraic_offs.pkl"
-DATFILE_PREFIX = "Trypsin-APMSF-2"
+DATFILE_PREFIX = "Trypsin-APMSF-1"
 
 ### protein
 # PREFIX = "Trypsin-PABA-1"
@@ -45,7 +45,7 @@ from parse import parse_tpkl, parse_tpkl_2, alg_scale, lin_regress_scale, integr
 
 length = 0
 directories = argv[1:]
-reference = parse_tpkl_2("/Volumes/beryllium/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
+reference = parse_tpkl_2("/Volumes/beryllium/saxs_waxs_tjump/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
 # reference = parse_tpkl("/Volumes/BAB_AGORA/July_Beamline_Trip/Analysis/common/integration/CypA-S99T/CypA-S99T-Buffer-2/xray_images/CypA-S99T-Buffer-2_17_-10us-14_on.tpkl")
 # fig,ax = plt.subplots()
 # files = []
@@ -107,9 +107,6 @@ for directory in directories:
     t1_p2 = clock()
     print("FS parser took {} seconds".format(t1_p1-t0_p1))
     print("AW parser took {} seconds".format(t1_p2-t0_p2))
-                    
- 
-
 
 
 

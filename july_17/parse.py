@@ -18,6 +18,8 @@ def parse(filename, mode="tpkl"):
 	variable."""
 	if mode == "tpkl":
 		return parse_tpkl_2(filename)
+    if mode == "dat":
+        return parse_dat(filename)
 
 def parse_dat(filename):
 	data = read_table(filename, delimiter="    ", engine='python', skiprows=1, names=['q','I','sigI'])
