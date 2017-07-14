@@ -38,10 +38,10 @@ class Trace(object):
 		top = np.dot(q_SA_var,q_SA_ref)
 		bottom = np.dot(q_SA_var,q_SA_var)
 		scalar = top/bottom
-		print("scalar: {}".format(scalar))
-		SA_adjusted = SA_var * scalar
-		sig_SA_adjusted = self.sigSA * scalar
-		return SA_adjusted, sig_SA_adjusted
+		self.scale_factor = scalar
+		self.scaled_SA = SA_var * scalar
+		self.scaled_sigSA = self.sigSA * scalar
+		return
 
 	def integration_scale(self, ref):
 		"""Scale by the total number of scattered photons"""
@@ -51,9 +51,10 @@ class Trace(object):
 		top = np.dot(SA_ref, q)
 		bottom =  np.dot(SA_var, q)
 		scalar = top/bottom
-		SA_adjusted = SA_var * scalar
-		sig_SA_adjusted = self.sigSA * scalar
-		return SA_adjusted, sig_SA_adjusted
+		self.scale_factor = scalar
+		self.scaled_SA = SA_var * scalar
+		self.scaled_sigSA = self.sigSA * scalar
+		return
 
 	def as_vector(self):
 		""" The SA column is the air-scattering adjusted integrated intensity"""
