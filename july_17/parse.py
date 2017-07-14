@@ -55,7 +55,7 @@ def parse_tpkl(filename):
     Nj = data['Nj']
     return Trace(q, sigS, S, sigSA, SA, Nj)
 
-    
+
 def parse_tpkl_depreciated(filename):
 	"""Loads tpkl files and generates a corresponding Trace object.
     This variation is dependent upon table.py from the Anfinrud lab
@@ -68,8 +68,6 @@ def parse_tpkl_depreciated(filename):
 	SA = data.SA
 	Nj = data.Nj
 	return Trace(q, sigS, S, sigSA, SA, Nj)
-
-
 
 
 ###scaling moved to Trace methods, please use there.
