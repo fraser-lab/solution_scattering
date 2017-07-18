@@ -28,9 +28,9 @@ REPS = range(5,50)
 # PREFIX = "CypA-5"
 
 ### buffer
-PREFIX = "Trypsin-AEBSF-Buffer-1"
-PKL_FILENAME = "Trypsin-AEBSF-Buffer-1_full_algebraic.pkl"
-DATFILE_PREFIX = "Trypsin-AEBSF-Buffer-1"
+PREFIX = "Trypsin-AEBSF-1"
+PKL_FILENAME = "Trypsin-AEBSF-1_full_algebraic.pkl"
+DATFILE_PREFIX = "Trypsin-AEBSF-1"
 
 ### protein
 # PREFIX = "Trypsin-PABA-1"
@@ -38,12 +38,12 @@ DATFILE_PREFIX = "Trypsin-AEBSF-Buffer-1"
 # DATFILE_PREFIX = "Trypsin-PABA-1"
 
 
-from parse import parse_tpkl_2, alg_scale, lin_regress_scale, integration_scale
+import parse
 
 
 length = 0
 directories = argv[1:]
-reference = parse_tpkl_2("/Volumes/beryllium/saxs_waxs_tjump/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
+reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
 # reference = parse_tpkl("/Volumes/BAB_AGORA/July_Beamline_Trip/Analysis/common/integration/CypA-S99T/CypA-S99T-Buffer-2/xray_images/CypA-S99T-Buffer-2_17_-10us-14_on.tpkl")
 # fig,ax = plt.subplots()
 # files = []
@@ -61,9 +61,9 @@ for directory in directories:
                     try: 
                         # onstring = subprocess.check_output("grep {0}_{1}_{2}_{3}_on beamstop-1.log".format(PREFIX, temp, i+1, time), shell=True)
                         # onscale = int(onstring.split()[3])
-                        on = parse_tpkl_2("{0}/{1}_{2}_{3}.tpkl".format(directory, PREFIX, i+1, time))
+                        on = parse.parse("{0}/{1}_{2}_{3}.tpkl".format(directory, PREFIX, i+1, time))
                         ax1.plot(on.q, on.as_vector())
-                        on_scaled = alg_scale(reference, on)
+                        on.alg_scale(reference)
                         # on_scaled = lin_regress_scale(reference, on)
                         # on_scaled = on.scale_isosbestic()[0]
                         # on = parse_tpkl("{0}/{1}_{2}_{3}_{4}_on.tpkl".format(directory, PREFIX, temp, i+1, time)).as_vector()[80:]
@@ -73,13 +73,13 @@ for directory in directories:
                             off_count = ""
                         # offstring = subprocess.check_output("grep {0}_{1}_{2}_{3}_off beamstop-1.log".format(PREFIX, temp, i+1, time), shell=True)
                         # offscale = int(offstring.split()[3])
-                        off = parse_tpkl_2("{0}/{1}_{2}_-10us{3}.tpkl".format(directory, PREFIX, i+1, off_count))
-                        off_scaled = alg_scale(reference, off)
+                        off = parse.parse("{0}/{1}_{2}_-10us{3}.tpkl".format(directory, PREFIX, i+1, off_count))
+                        off.alg_scale(reference)
                         # off_scaled = lin_regress_scale(reference, off)
                         # off_scaled = off.scale_isosbestic()[0]
                         # print "{0}/{1}_{2}_{3}_on.tpkl".format(directory, PREFIX, i+1, time)
                         # 
-                        subtracted = [(on_scaled[0][j] - off_scaled[0][j], np.sqrt(on_scaled[1][j]**2 + off_scaled[1][j]**2)) for j in range(len(on.q))]
+                        subtracted = [(on.scaled_SA - off.scaled_SA, np.sqrt(on.scaled_sigSA**2 + off.scaled_sigSA**2)) for j in range(len(on.q))]
                         # subtracted = [(on_scaled[0][j], np.sqrt(on_scaled[1][j]**2)) for j in range(len(on.q))]
 
                         # print "appending"
