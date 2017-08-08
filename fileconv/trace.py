@@ -62,16 +62,6 @@ class Trace(object):
 	
 	def get_q(self):
 		return self.q
-
-	def set_name(self, name):
-		self.name=name
-		return
-
-	def write_dat(self, filename):
-	    data = np.column_stack((self.q, self.SA, self.sigSA))
-	    np.savetxt(filename, data, fmt='%f', delimiter='    ', newline='\n', header='q    I    sigI')
-	    print("data successfully written to {}".format(filename))
-	    return
 		
 	def __repr__(self):
 		final = "Q\tSA\tsigSA\tNj\n"

@@ -16,10 +16,13 @@ if sys.version_info[0] < 3:
 from time import clock
 import parse
 import pathlib
+from scipy.stats import chisquare
+import scipy.integrate as integrate
 
 
 script, directory = sys.argv
-reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
+# reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
+reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
 
 
 
@@ -30,9 +33,10 @@ def experiment_map(direct):
     data_directories = [item for item in data_dir.iterdir() if item.is_dir()]
     buffer_datasets = []
     protein_datasets = []
+    static_datasets = []
     for item in data_directories:
         if 'static' in item.name:
-            pass
+            static_datasets.append(item)
         elif "Buffer" in item.name:
             buffer_datasets.append(item)
         else:
@@ -107,14 +111,17 @@ for protein, buff in experiment_map(directory).items():
     t0 = clock()
 
     parent, samp, reps, on_off_map = sample_map(protein)
-    b_parent, b_samp, b_reps, b_on_off_map = sample_map(buff)
+    # b_parent, b_samp, b_reps, b_on_off_map = sample_map(buff)
     plt.figure(figsize=(10,5),dpi=300)
+
+    subtracted_vectors = {i: [] for i in on_off_map.keys()}
+    sub_err = {i: np.array(list()) for i in on_off_map.keys()}
 
     for n in reps:
         i = -1
         for on, off in on_off_map.items():
 
-            if on in t_shortlist:
+            # if on in t_shortlist:
 
                 on_data = parse.parse("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, on))
                 on_data.alg_scale(reference)
@@ -124,56 +131,87 @@ for protein, buff in experiment_map(directory).items():
                 off_data.alg_scale(reference)
                 off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
 
-                buf_on_data = parse.parse("{0}/{1}_{2}_{3}.tpkl".format(b_parent, b_samp, n, on))
-                buf_on_data.alg_scale(reference)
-                buf_on_string = "{0}/{1}_{2}_{3}.tpkl".format(b_parent, b_samp, n, on)
+                # buf_on_data = parse.parse("{0}/{1}_{2}_{3}.tpkl".format(b_parent, b_samp, n, on))
+                # buf_on_data.alg_scale(reference)
+                # buf_on_string = "{0}/{1}_{2}_{3}.tpkl".format(b_parent, b_samp, n, on)
 
-                buf_off_data = parse.parse("{0}/{1}_{2}_{3}.tpkl".format(b_parent, b_samp, n, off))
-                buf_off_data.alg_scale(reference)
-                buf_off_string = "{0}/{1}_{2}_{3}.tpkl".format(b_parent, b_samp, n, off)
+                # buf_off_data = parse.parse("{0}/{1}_{2}_{3}.tpkl".format(b_parent, b_samp, n, off))
+                # buf_off_data.alg_scale(reference)
+                # buf_off_string = "{0}/{1}_{2}_{3}.tpkl".format(b_parent, b_samp, n, off)
 
                 # sub = on_data.scaled_SA - off_data.scaled_SA
                 subSA = (on_data.scaled_SA - off_data.scaled_SA)
-                subSAsig = np.sqrt((on_data.scale_factor*on_data.sigSA)**2+(off_data.scale_factor*off_data.sigSA)**2-(2*on_data.scale_factor*off_data.scale_factor*np.cov(on_data.sigSA,off_data.sigSA)[0][1]))
+                # subSAsig = np.sqrt((on_data.scale_factor*on_data.sigSA)**2+(off_data.scale_factor*off_data.sigSA)**2-(2*on_data.scale_factor*off_data.scale_factor*np.cov(on_data.sigSA,off_data.sigSA)[0][1]))
+                subSAsig = np.sqrt((on_data.scale_factor*on_data.sigSA)**2+(off_data.scale_factor*off_data.sigSA)**2)
                 sub_scaled = Trace(on_data.q, None, None, subSAsig, subSA, None)
+                subtracted_vectors[on].append(sub_scaled.SA)
+                sub_err[on].append(sub_scaled.sigSA)
 
-                buf_subSA = (buf_on_data.scaled_SA - buf_off_data.scaled_SA)
-                buf_subSAsig = np.sqrt((buf_on_data.scale_factor*buf_on_data.sigSA)**2+(buf_off_data.scale_factor*buf_off_data.sigSA)**2-(2*buf_on_data.scale_factor*buf_off_data.scale_factor*np.cov(buf_on_data.sigSA,buf_off_data.sigSA)[0][1]))
-                buf_sub_scaled = Trace(buf_on_data.q, None, None, buf_subSAsig, buf_subSA, None)
+                # buf_subSA = (buf_on_data.scaled_SA - buf_off_data.scaled_SA)
+                # buf_subSAsig = np.sqrt((buf_on_data.scale_factor*buf_on_data.sigSA)**2+(buf_off_data.scale_factor*buf_off_data.sigSA)**2-(2*buf_on_data.scale_factor*buf_off_data.scale_factor*np.cov(buf_on_data.sigSA,buf_off_data.sigSA)[0][1]))
+                # buf_sub_scaled = Trace(buf_on_data.q, None, None, buf_subSAsig, buf_subSA, None)
                 # sub.scaled_SA = on_data.scaled_SA - off_data.scaled_SA
 
-                # vectors.append((off_data.as_vector(), off_string, on_string))
-                # vectors.append((on_data.as_vector(), off_string, on_string))
-                if i < 0:
-                    i=0
-                    ni = i
-                else:
-                    # i += int(255/len(on_off_map))
-                    i += int(255/len(t_shortlist))
-                    ni = 255-i
 
-                plt.subplot(2, 1, 1)
-                plt.ylabel('protein')
-                plt.xscale("log")
-                plt.plot(sub_scaled.q, sub_scaled.SA, label="{}".format(on), color=plt.cm.inferno(ni))
-                plt.tight_layout()
-                plt.subplot(2, 1, 2)
-                plt.ylabel('Buffer')
-                plt.xscale("log")
-                plt.plot(buf_sub_scaled.q, buf_sub_scaled.SA, label="{}".format(on), color=plt.cm.inferno(ni))
-                plt.tight_layout()
+                # if i < 0:
+                #     i=0
+                #     ni = i
+                # else:
+                #     # i += int(255/len(on_off_map))
+                #     i += int(255/len(t_shortlist))
+                #     ni = 255-i
+
+                # plt.subplot(2, 1, 1)
+                
+                # plt.plot(sub_scaled.q, sub_scaled.SA, label="{}".format(on), color=plt.cm.inferno(ni))
+                
+                # plt.subplot(2, 1, 2)
+                # plt.ylabel('Buffer')
+                # plt.xscale("log")
+                # plt.plot(buf_sub_scaled.q, buf_sub_scaled.SA, label="{}".format(on), color=plt.cm.inferno(ni))
+                # plt.tight_layout()
 
 
                 # plt.errorbar(sub_scaled.q, sub_scaled.SA, label="{}".format(on), color=plt.cm.inferno(ni), yerr=sub_scaled.sigSA)
 
-            else:
-                pass
+            # else:
+            #     pass
+
+    ii = -1
+    for key in subtracted_vectors.keys():
+        if ii < 0:
+            ii=0
+            nii = ii
+        else:
+            # i += int(255/len(on_off_map))
+            ii += int(255/len(subtracted_vectors.keys()))
+            nii = 255-ii
+        scrunch = np.vstack(subtracted_vectors[key])
+        scrunch_mean = np.mean(scrunch, axis=0)
+        scrunch_mean_arr = np.array([scrunch_mean for i in range(len(scrunch))])
+        chi_stat, p_val = chisquare(scrunch,f_exp=scrunch_mean_arr,axis=1)
+        scrunch_clean = scrunch[chi_stat<1.5]
+        # scrunch_err = np.vstack(sub_err[key])
+        print("for dataset {}, {} of the {} datapoints were dropped".format(key,(len(scrunch)-len(scrunch_clean)),len(scrunch)))
+
+    
+        # plt.plot(sub_scaled.q, np.mean(scrunch, axis=0), label="{}".format(key))
+        # plt.errorbar(sub_scaled.q, np.mean(scrunch, axis=0), label="{}".format(key), color=plt.cm.inferno(nii), yerr=np.mean(scrunch_err, axis=0))
+        # plt.errorbar(sub_scaled.q, np.median(scrunch, axis=0), label="{}".format(key), color=plt.cm.inferno(nii), yerr=np.median(scrunch_err, axis=0))
+        plt.errorbar(sub_scaled.q, np.mean(scrunch, axis=0), label="{}".format(key), color=plt.cm.inferno(nii), yerr=np.std(scrunch, axis=0))
 
 
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = OrderedDict(zip(labels, handles))
+    plt.title('{} - Time Resolved Signal'.format(samp))
+    plt.ylabel(r'$\Delta I$ (A.U.)')
+    plt.xlabel(r'q ($\AA^{-1}$)')
+    plt.xscale("log")
+    plt.tight_layout()
     plt.legend(by_label.values(), by_label.keys())
     plt.savefig("{}_scaled_TR".format(samp))
+
+
 
     ### this will work to convert mpl to plotly, quite slow though
     # fig = plt.gcf()
@@ -181,6 +219,10 @@ for protein, buff in experiment_map(directory).items():
 
     t1 = clock()
     print("TR signal scaled & plotted for {:20s} took {:4.2f} seconds".format(samp, t1-t0))
+    # print(len(subtracted_vectors))
+    # print(len(subtracted_vectors["1us"]))
+    # print(type(subtracted_vectors["1us"]))
+    # print(np.vstack(subtracted_vectors["1us"]))
 
 #####
 def chisquared(var, ref):

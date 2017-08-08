@@ -1,19 +1,15 @@
-from imp import load_source
 from numpy import load, column_stack, savetxt
 from glob import glob
 import sys
+from parse import parse
 
 script, main_dir = sys.argv
 
-### tell script where to find table.py
-table_script = '/Users/student/Desktop/solution_scattering/table.py'
 
 def tpkl2dat(oldfile, newfile):
-    table = load_source('table', table_script)
-    from table import table
-    convertme = load(oldfile)
-    ally = column_stack((convertme.q, convertme.SA, convertme.sigSA))
-    savetxt(newfile, ally, fmt='%f', delimiter='    ', newline='\n', header='q    I    sigI')
+    convert = parse(oldfile)
+    converted = column_stack((convert.q, convert.SA, convert.sigSA))
+    savetxt(newfile, converted, fmt='%f', delimiter='    ', newline='\n', header='q    I    sigI')
 
 
 list_of_dirs = glob(main_dir+"*/")
