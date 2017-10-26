@@ -43,7 +43,7 @@ class Trace(object):
 	    sig_SA_adjusted = self.sigSA * scalar
 	    return SA_adjusted, sig_SA_adjusted
 
-    def integration_scale(self, ref):
+	def integration_scale(self, ref):
 	    """Scale by the total number of scattered photons"""
 	    SA_ref = ref.SA
 	    SA_var = self.SA
@@ -61,6 +61,19 @@ class Trace(object):
 	
 	def get_q(self):
 		return self.q
+
+	def plot_curve(self, axis, errorbar = False, scaled = True):
+		if scaled:
+			y = self.SA_adjusted
+			yerr = self.sig_SA_adjusted
+		else:
+			y = self.SA
+			yerr = self.sigSA
+		
+		if errorbar:
+			axis.errorbar(self.q, y, yerr)
+		else:
+			axis.plot(self.q, y)
 		
 	def __repr__(self):
 		final = "Q\tSA\tsigSA\tNj\n"
