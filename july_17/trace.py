@@ -56,6 +56,25 @@ class Trace(object):
 		self.scaled_sigSA = self.sigSA * scalar
 		return
 
+	def buffer_scale(self, ref):
+		"""Scale by the total number of scattered photons"""
+		SA_ref = ref.SA
+		SA_var = self.SA
+		q = self.q
+		data_mask = np.array(q, dtype=bool)
+		data_mask[q<1.5]=False
+		data_mask[q>3.6]=False
+		q = q[data_mask]
+		SA_ref = SA_ref[data_mask]
+		SA_var = SA_var[data_mask]
+		top = np.dot(SA_ref, q)
+		bottom =  np.dot(SA_var, q)
+		scalar = top/bottom
+		self.buffer_scale_factor = scalar
+		self.scaled_SA = self.SA * scalar
+		self.scaled_sigSA = self.sigSA * scalar
+		return
+
 	def as_vector(self):
 		""" The SA column is the air-scattering adjusted integrated intensity"""
 		return self.SA

@@ -46,6 +46,11 @@ def guinier_plotter(sample):
     return
 
 def real_space_plotter(samples):
+
+    if isinstance(samples,list):
+        pass
+    else:
+        samples = [samples]
     
     fig=plt.figure(figsize=(6,6),dpi=100)
     fig.suptitle("Real Space Analysis")

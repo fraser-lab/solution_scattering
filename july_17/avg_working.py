@@ -33,11 +33,43 @@ from new_analysis import real_space_plotter
 # script, directory = sys.argv
 # reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
 reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
+# reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-1/xray_images/CypA-S99T-1_9_75ns_off.tpkl")
+
 CHI_OUTLIER = 1.5
 t_shortlist = ["-10.1us", "1us", "10us", "100us", "1ms"]
 # t_shortlist = ["562ns"]
 # t_shortlist = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us"]
 
+
+def sample_map_2(samp_dir):
+    samp_dir = pathlib.Path(samp_dir)
+    samp_files = list(samp_dir.glob(pattern='**/*.tpkl'))
+    # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
+    t0 = clock()
+    REPS = []
+    TIMES = []
+    for file in samp_files:
+        name = file.name
+        parent = file.parent
+        samp, rep, time, onoff = name.split('_')
+        # time = time.replace('.tpkl','')
+        REPS.append(rep)
+        TIMES.append(time)
+
+    REPS = sorted(list(set(REPS)), key=float)
+    TIMES = list(set(TIMES))
+    # OFFS = [item for item in TIMES if "-10us" in item]
+    # ONS = [item for item in TIMES if "-10us" not in item]
+    OFFS = [item for item in TIMES if "off" in item]
+    ONS = [item for item in TIMES if "on" not in item]
+
+    tup =  [parse.unit_sort(item) for item in ONS]
+    tup_sort = sorted(tup, key=lambda item: (item[0],parse.natural_keys(item[1])))
+    clean_ons = [item[1] for item in tup_sort]
+    on_off_map = {k:v for k,v in (zip(clean_ons,clean_ons))}
+    # on_off_map = {k:v for k,v in (zip(clean_ons,sorted(OFFS, key=parse.alphanum_key)))}
+
+    return parent, samp, REPS, on_off_map
 
 def sample_map(samp_dir):
     samp_dir = pathlib.Path(samp_dir)
@@ -65,6 +97,54 @@ def sample_map(samp_dir):
     on_off_map = {k:v for k,v in (zip(clean_ons,sorted(OFFS, key=parse.alphanum_key)))}
 
     return parent, samp, REPS, on_off_map
+
+def static_map(samp_dir):
+    samp_dir = pathlib.Path(samp_dir)
+    samp_files = list(samp_dir.glob(pattern='**/*.tpkl'))
+    # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
+    # t0 = clock()
+    REPS = []
+    TEMPS = []
+    SERIES = []
+    # TIMES = []
+    for file in samp_files:
+        name = file.name
+        parent = file.parent
+        samp, info, rep = name.split('_')
+        if "BT" in info:
+            dilution = info[3:5]
+            temp = info[5:]
+            print(temp)
+        elif "PC" in info:
+            dilution = info[3:6]
+            temp = info[7:]
+            print(temp)
+        else:
+            print(info)
+        rep = rep.replace(".tpkl","")
+        # time = time.replace('.tpkl','')
+        REPS.append(rep)
+        SERIES.append(dilution)
+        TEMPS.append(temp)
+        # TIMES.append(time)
+
+    REPS = sorted(list(set(REPS)), key=float)
+    TEMPS = sorted(list(set(TEMPS)), key=float)
+    # SERIES = sorted(list(set(SERIES)), key=float)
+    # TIMES = list(set(TIMES))
+    # OFFS = [item for item in TIMES if "-10us" in item]
+    # ONS = [item for item in TIMES if "-10us" not in item]
+    # OFFS = [item for item in TIMES if "off" in item]
+    # ONS = [item for item in TIMES if "on" not in item]
+
+    # tup =  [parse.unit_sort(item) for item in ONS]
+    # tup_sort = sorted(tup, key=lambda item: (item[0],parse.natural_keys(item[1])))
+    # clean_ons = [item[1] for item in tup_sort]
+    # on_off_map = {k:v for k,v in (zip(clean_ons,clean_ons))}
+
+    print(parent, samp, REPS, TEMPS, SERIES)
+
+    return parent, samp, REPS, TEMPS, SERIES
 
 
 def chi_stat(var, ref):
@@ -102,12 +182,39 @@ def iterative_chi_filter(vectors):
     return clean_vectors
 
 
-def subtract_scaled_traces(trace_one,trace_two):
+def subtract_scaled_traces(trace_one,trace_two,buffer=None):
     err_one = (trace_one.scale_factor*trace_one.sigSA)**2
     err_two = (trace_two.scale_factor*trace_two.sigSA)**2
     err_cov = (2*trace_one.scale_factor*trace_two.scale_factor*np.cov(trace_one.sigSA,trace_two.sigSA)[0][1])
     total_err = np.sqrt(np.abs(err_one+err_two-err_cov))
     output_SA = (trace_one.scaled_SA - trace_two.scaled_SA)
+    output = Trace(trace_one.q, np.empty_like(trace_one.q), np.empty_like(trace_one.q), total_err, output_SA, np.empty_like(trace_one.q))
+    return output
+
+def buffer_subtract_scaled_traces(trace_one,trace_two):
+    err_one = (trace_one.buffer_scale_factor*trace_one.sigSA)**2
+    err_two = (trace_two.buffer_scale_factor*trace_two.sigSA)**2
+    err_cov = (2*trace_one.buffer_scale_factor*trace_two.buffer_scale_factor*np.cov(trace_one.sigSA,trace_two.sigSA)[0][1])
+    total_err = np.sqrt(np.abs(err_one+err_two-err_cov))
+    output_SA = (trace_one.scaled_SA - trace_two.scaled_SA)
+    output = Trace(trace_one.q, np.empty_like(trace_one.q), np.empty_like(trace_one.q), total_err, output_SA, np.empty_like(trace_one.q))
+    return output
+
+def add_scaled_traces(trace_one,trace_two):
+    err_one = (trace_one.scale_factor*trace_one.sigSA)**2
+    err_two = (trace_two.scale_factor*trace_two.sigSA)**2
+    err_cov = (2*trace_one.scale_factor*trace_two.scale_factor*np.cov(trace_one.sigSA,trace_two.sigSA)[0][1])
+    total_err = np.sqrt(np.abs(err_one+err_two+err_cov))
+    output_SA = (trace_one.scaled_SA + trace_two.scaled_SA)
+    output = Trace(trace_one.q, np.empty_like(trace_one.q), np.empty_like(trace_one.q), total_err, output_SA, np.empty_like(trace_one.q))
+    return output
+
+def buffer_add_scaled_traces(trace_one,trace_two):
+    err_one = (trace_one.buffer_scale_factor*trace_one.sigSA)**2
+    err_two = (trace_two.buffer_scale_factor*trace_two.sigSA)**2
+    err_cov = (2*trace_one.buffer_scale_factor*trace_two.buffer_scale_factor*np.cov(trace_one.sigSA,trace_two.sigSA)[0][1])
+    total_err = np.sqrt(np.abs(err_one+err_two+err_cov))
+    output_SA = (trace_one.scaled_SA + trace_two.scaled_SA)
     output = Trace(trace_one.q, np.empty_like(trace_one.q), np.empty_like(trace_one.q), total_err, output_SA, np.empty_like(trace_one.q))
     return output
 
@@ -138,16 +245,30 @@ def time_resolved_traces(parent, samp, reps, on_off_map):
     for n in reps:
         for on, off in on_off_map.items():
 
+            # on_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, on))
             on_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, on))
-            on_data = parse.parse(on_string)
-            on_data.alg_scale(reference)
+            try:
+                on_data = parse.parse(on_string)
+                on_data.alg_scale(reference)
+            except:
+                print(on_string+"\tfailed")
+                pass
 
+            # off_string = ("{0}/{1}_{2}_{3}_off.tpkl".format(parent, samp, n, off))
             off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
-            off_data = parse.parse(off_string)
-            off_data.alg_scale(reference)
+            try:
+                off_data = parse.parse(off_string)
+                off_data.alg_scale(reference)
+            except:
+                print(off_string+"\tfailed")
+                pass
 
-            sub_scaled = subtract_scaled_traces(on_data,off_data)
-            subtracted_vectors[on].append(sub_scaled)
+            if isinstance(on_data,type(None)) or isinstance(off_data,type(None)):
+                print(on_string+"\tfailed")
+                pass
+            else:
+                sub_scaled = subtract_scaled_traces(on_data,off_data)
+                subtracted_vectors[on].append(sub_scaled)
 
     return subtracted_vectors
 
@@ -158,6 +279,7 @@ def all_off_traces(parent, samp, reps, on_off_map):
     for n in reps:
         for off in on_off_map.values():
 
+            # off_string = ("{0}/{1}_{2}_{3}_off.tpkl".format(parent, samp, n, off))
             off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
             off_data = parse.parse(off_string)
             off_data.alg_scale(reference)
@@ -235,10 +357,12 @@ def unpack_traces(sampling):
 def unpack(packed_trace):
     return(packed_trace.SA,packed_trace.sigSA)
 
+########
 t0 = clock()
 # parent, samp, reps, on_off_map = sample_map("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/")
 # parent, samp, reps, on_off_map = sample_map(directory)
 data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/"
+# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-2/xray_images/"
 
 parent, samp, reps, on_off_map = sample_map(data_dir)
 subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map)
@@ -248,22 +372,40 @@ all_off_vectors = all_off_traces(parent, samp, reps, on_off_map)
 filtered_off_vectors = iterative_chi_filter(all_off_vectors)
 
 buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-1/xray_images/"
+# buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-Buffer-2/xray_images/"
 parent2, samp2, reps2, on_off_map2 = sample_map(buffer_dir)
+buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2)
+buffer_filtered_vectors = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
 buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2)
 buffer_filtered_off_vectors = iterative_chi_filter(buffer_all_off_vectors)
 
 
+
 avg_filt_off = average_traces(filtered_off_vectors)
-avg_filt_off.set_name("testing_testing_one_two")
-print("mic check:\n{}".format(avg_filt_off.name))
+avg_filt_off.buffer_scale(avg_filt_off)
 buff_avg_filt_off = average_traces(buffer_filtered_off_vectors)
-protein_only_avg_filt_off = subtract_unscaled_traces(avg_filt_off,buff_avg_filt_off)
-mean_TR = [average_traces(filtered_vectors[key]) for key in filtered_vectors.keys()]
-showme = [add_unscaled_traces(protein_only_avg_filt_off,item) for item in mean_TR]
-showme[0].write_dat("first_output.dat")
+buff_avg_filt_off.buffer_scale(avg_filt_off)
+protein_only_avg_filt_off = buffer_subtract_scaled_traces(avg_filt_off,buff_avg_filt_off)
+# protein_only_avg_filt_off.buffer_scale(protein_only_avg_filt_off)
+mean_TR = {key: subtract_unscaled_traces(average_traces(filtered_vectors[key]),average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}
+for diff in mean_TR.keys():
+    mean_TR[diff].write_dat(samp+"_diff_"+diff+".dat")
+#     value.buffer_scale(protein_only_avg_filt_off)
+showme = {key: add_unscaled_traces(protein_only_avg_filt_off,mean_TR[key]) for key in mean_TR.keys()}
+# showme["750ns"].write_dat("first_output.dat")
+# print(showme.keys())
+for itm in showme.keys():
+    showme[itm].write_dat(samp+"_"+itm+".dat")
 
-real_space_plotter(showme)
+# real_space_plotter(showme)
 
+############
+
+# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-static-1/xray_images/"
+
+# parent, samp, reps, temps, series = static_map(data_dir)
+
+###########
 
 # plot_mean_TR_traces(samp,filtered_vectors)
 
