@@ -6,7 +6,7 @@ Benjamin Barad
 from numpy import load
 from scipy import stats
 from trace import Trace
-from pandas import read_table,DataFrame
+from pandas import read_table
 import numpy as np
 import re
 
@@ -25,32 +25,20 @@ def parse(filename):
         raise TypeError('scattering data can only be read from the following filetypes *.tpkl, *.dat')
 
 def parse_dat(filename):
-    data = read_table(filename, delimiter="    ", engine='python', skiprows=1, names=['q','I','sigI'])
-    q = data.q
-    SA = data.I
-    sigSA = data.sigI
-    S = np.empty_like(data.q)
-    sigS = np.empty_like(data.q)
-    Nj = np.empty_like(data.q)
-    # return q,SA,sigSA
-    # sigS = data.sigI
-    # S = data.I
-    # Nj = data.q
-    return Trace(q, sigS, S, sigSA, SA, Nj)
+	data = read_table(filename, delimiter="    ", engine='python', skiprows=1, names=['q','I','sigI'])
+	q = data.q
+	SA = data.I
+	sigSA = data.sigI
+	return q,SA,sigSA
+	# sigS = data.sigI
+	# S = data.I
+	# Nj = data.q
+	# return Trace(q, sigS, S, sigSA, SA, Nj)
 
 
 dt = np.dtype({'names': ['q','S','sigS','SA','sigSA','Nj'],
                     'formats': ['<f8','<f8','<f8','<f8','<f8','<i8']})
 
-
-def parse_tpkl_2(filename):
-    """Loads tpkl files and generates a corresponding Trace object.
-    """
-    TPKL_HEADER_BYTES = 279 ### this value could vary
-    with open(filename, "rb") as f:
-        f.seek(TPKL_HEADER_BYTES)
-        data = np.fromfile(f, dtype=dt)
-    return DataFrame.from_records(data)
 
 def parse_tpkl(filename):
     """Loads tpkl files and generates a corresponding Trace object.

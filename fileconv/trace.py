@@ -56,54 +56,12 @@ class Trace(object):
 		self.scaled_sigSA = self.sigSA * scalar
 		return
 
-	def buffer_scale(self, ref):
-		"""Scale by the total number of scattered photons"""
-		SA_ref = ref.SA
-		SA_var = self.SA
-		q = self.q
-		data_mask = np.array(q, dtype=bool)
-		data_mask[q<1.5]=False
-		data_mask[q>3.6]=False
-		q = q[data_mask]
-		SA_ref = SA_ref[data_mask]
-		SA_var = SA_var[data_mask]
-		top = np.dot(SA_ref, q)
-		bottom =  np.dot(SA_var, q)
-		scalar = top/bottom
-		self.buffer_scale_factor = scalar
-		self.scaled_SA = self.SA * scalar
-		self.scaled_sigSA = self.sigSA * scalar
-		return
-
 	def as_vector(self):
 		""" The SA column is the air-scattering adjusted integrated intensity"""
 		return self.SA
 	
 	def get_q(self):
 		return self.q
-
-
-	def plot_curve(self, axis, errorbar = False, scaled = True):
-		if scaled:
-			y = self.SA_adjusted
-			yerr = self.sig_SA_adjusted
-		else:
-			y = self.SA
-			yerr = self.sigSA
-		
-		if errorbar:
-			axis.errorbar(self.q, y, yerr)
-		else:
-			axis.plot(self.q, y)
-	def set_name(self, name):
-		self.name=name
-		return
-
-	def write_dat(self, filename):
-	    data = np.column_stack((self.q, self.SA, self.sigSA))
-	    np.savetxt(filename, data, fmt='%f', delimiter='    ', newline='\n', header='q    I    sigI')
-	    print("data successfully written to {}".format(filename))
-	    return
 		
 	def __repr__(self):
 		final = "Q\tSA\tsigSA\tNj\n"
