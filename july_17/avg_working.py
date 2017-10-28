@@ -103,6 +103,7 @@ def static_map(samp_dir):
     samp_files = list(samp_dir.glob(pattern='**/*.tpkl'))
     # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
     # t0 = clock()
+    sample_map = []
     REPS = []
     TEMPS = []
     SERIES = []
@@ -122,6 +123,10 @@ def static_map(samp_dir):
         else:
             print(info)
         rep = rep.replace(".tpkl","")
+        on_data = parse.parse(str(file))
+        on_data.alg_scale(reference)
+        sample_map.append((samp,dilution,temp,on_data))
+
         # time = time.replace('.tpkl','')
         REPS.append(rep)
         SERIES.append(dilution)
@@ -144,7 +149,64 @@ def static_map(samp_dir):
 
     print(parent, samp, REPS, TEMPS, SERIES)
 
-    return parent, samp, REPS, TEMPS, SERIES
+    return sample_map
+
+def iter_vir(samples, full_conc):
+    n=0
+    
+    temps = set([item[2] for item in samples])
+    temps = sorted(list(temps))
+    concs = [full_conc/1, full_conc/3, full_conc/9]
+    conc_map = {"PC0":full_conc/1, "PC1":full_conc/3, "PC2":full_conc/9 }
+    I0q_output = []
+    a2_output = []
+    spf_output = []
+    for temp in temps:
+        sv_x = []
+        sv_y = []
+        I_0z = []
+        for item in samples:
+            if item[2] == temp:
+                # x = item[3].q
+                y = item[3].SA
+                # data_mask = np.array(x, dtype=bool)
+                # data_mask[x>0.008]=False
+                # x = x[data_mask]
+                # y = y[data_mask]
+                # I_0 = np.exp(linregress(x,y)[1])
+                # I_0z.append(I_0)
+                sv_y.append(1/y)
+                sv_x.append(conc_map[item[1]])
+                n+=1
+            else:
+                pass
+        sv_xp = np.array(sv_x)
+        # print(sv_xp.shape)
+        sv_yp = np.stack(sv_y)
+        # print(sv_yp.shape)
+        m,b = np.polyfit(sv_xp,sv_yp,1)
+        mw = 18500
+        conc = 50
+        # print(fit_I0)
+            # fit_fxnI0 = np.poly1d(fit_I0)
+            # plt.scatter(sv_xp,sv_yp, label=temp)
+            # plt.plot(sv_xp,fit_fxnI0(sv_xp), label=temp+"_fit")
+            # vir_stats = linregress(sv_xp,sv_yp)
+            # I_0_0 = 1/vir_stats[1]
+            # slope = vir_stats[0]
+            # MW = 18500
+            # A = slope*I_0_0/(2*MW)
+            # print("\nStats for virial fit:\n{}\n".format(vir_stats))
+            # print("I(0,0) = {}".format(I_0_0))
+            # print("A = {}".format(A))
+            # print("I(c,0) for pc0 = {}".format(I_0z[0]))
+            # print("I(c,0) for pc1 = {}".format(I_0z[1]))
+            # print("I(c,0) for pc2 = {}".format(I_0z[2]))
+        I0q_output.append((temp,1/b))
+        a2_output.append((temp,m*(1/b)/2*mw))
+        spf_output.append((temp, 1/(1+m/b*conc)))
+
+    return spf_output
 
 
 def chi_stat(var, ref):
@@ -358,54 +420,119 @@ def unpack(packed_trace):
     return(packed_trace.SA,packed_trace.sigSA)
 
 ########
-t0 = clock()
-# parent, samp, reps, on_off_map = sample_map("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/")
-# parent, samp, reps, on_off_map = sample_map(directory)
-data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/"
-# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-2/xray_images/"
+# t0 = clock()
+# # parent, samp, reps, on_off_map = sample_map("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/")
+# # parent, samp, reps, on_off_map = sample_map(directory)
+# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/"
+# # data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-2/xray_images/"
 
-parent, samp, reps, on_off_map = sample_map(data_dir)
-subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map)
-filtered_vectors = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
+# parent, samp, reps, on_off_map = sample_map(data_dir)
+# subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map)
+# filtered_vectors = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
 
-all_off_vectors = all_off_traces(parent, samp, reps, on_off_map)
-filtered_off_vectors = iterative_chi_filter(all_off_vectors)
+# all_off_vectors = all_off_traces(parent, samp, reps, on_off_map)
+# filtered_off_vectors = iterative_chi_filter(all_off_vectors)
 
-buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-1/xray_images/"
-# buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-Buffer-2/xray_images/"
-parent2, samp2, reps2, on_off_map2 = sample_map(buffer_dir)
-buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2)
-buffer_filtered_vectors = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
-buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2)
-buffer_filtered_off_vectors = iterative_chi_filter(buffer_all_off_vectors)
+# buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-1/xray_images/"
+# # buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-Buffer-2/xray_images/"
+# parent2, samp2, reps2, on_off_map2 = sample_map(buffer_dir)
+# buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2)
+# buffer_filtered_vectors = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
+# buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2)
+# buffer_filtered_off_vectors = iterative_chi_filter(buffer_all_off_vectors)
 
 
 
-avg_filt_off = average_traces(filtered_off_vectors)
-avg_filt_off.buffer_scale(avg_filt_off)
-buff_avg_filt_off = average_traces(buffer_filtered_off_vectors)
-buff_avg_filt_off.buffer_scale(avg_filt_off)
-protein_only_avg_filt_off = buffer_subtract_scaled_traces(avg_filt_off,buff_avg_filt_off)
-# protein_only_avg_filt_off.buffer_scale(protein_only_avg_filt_off)
-mean_TR = {key: subtract_unscaled_traces(average_traces(filtered_vectors[key]),average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}
-for diff in mean_TR.keys():
-    mean_TR[diff].write_dat(samp+"_diff_"+diff+".dat")
-#     value.buffer_scale(protein_only_avg_filt_off)
-showme = {key: add_unscaled_traces(protein_only_avg_filt_off,mean_TR[key]) for key in mean_TR.keys()}
-# showme["750ns"].write_dat("first_output.dat")
-# print(showme.keys())
-for itm in showme.keys():
-    showme[itm].write_dat(samp+"_"+itm+".dat")
+# avg_filt_off = average_traces(filtered_off_vectors)
+# avg_filt_off.buffer_scale(avg_filt_off)
+# buff_avg_filt_off = average_traces(buffer_filtered_off_vectors)
+# buff_avg_filt_off.buffer_scale(avg_filt_off)
+# protein_only_avg_filt_off = buffer_subtract_scaled_traces(avg_filt_off,buff_avg_filt_off)
+# # protein_only_avg_filt_off.buffer_scale(protein_only_avg_filt_off)
+# mean_TR = {key: subtract_unscaled_traces(average_traces(filtered_vectors[key]),average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}
+# for diff in mean_TR.keys():
+#     mean_TR[diff].write_dat(samp+"_diff_"+diff+".dat")
+# #     value.buffer_scale(protein_only_avg_filt_off)
+# showme = {key: add_unscaled_traces(protein_only_avg_filt_off,mean_TR[key]) for key in mean_TR.keys()}
+# # showme["750ns"].write_dat("first_output.dat")
+# # print(showme.keys())
+# for itm in showme.keys():
+#     showme[itm].write_dat(samp+"_"+itm+".dat")
 
 # real_space_plotter(showme)
 
 ############
 
-# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-static-1/xray_images/"
+# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-static-1/xray_images/"
 
 # parent, samp, reps, temps, series = static_map(data_dir)
 
 ###########
+
+data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-static-1/xray_images/"
+wt_map = static_map(data_dir)
+# print(wt_map)
+wt_full = iter_vir(wt_map, 50)
+
+# # t0 = clock()
+# # parent, samp, reps, on_off_map = sample_map("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/")
+# # parent, samp, reps, on_off_map = sample_map(directory)
+# data_dir2 = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/"
+# # data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-2/xray_images/"
+
+# parent, samp, reps, on_off_map = sample_map(data_dir2)
+# subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map)
+# filtered_vectors = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
+
+# all_off_vectors = all_off_traces(parent, samp, reps, on_off_map)
+# filtered_off_vectors = iterative_chi_filter(all_off_vectors)
+
+# buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-1/xray_images/"
+# # buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-Buffer-2/xray_images/"
+# parent2, samp2, reps2, on_off_map2 = sample_map(buffer_dir)
+# buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2)
+# buffer_filtered_vectors = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
+# buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2)
+# buffer_filtered_off_vectors = iterative_chi_filter(buffer_all_off_vectors)
+
+
+
+# avg_filt_off = average_traces(filtered_off_vectors)
+# avg_filt_off.SA = avg_filt_off.SA/wt_full[0][1]
+# avg_filt_off.buffer_scale(avg_filt_off)
+# buff_avg_filt_off = average_traces(buffer_filtered_off_vectors)
+# buff_avg_filt_off.buffer_scale(avg_filt_off)
+# protein_only_avg_filt_off = buffer_subtract_scaled_traces(avg_filt_off,buff_avg_filt_off)
+# protein_only_avg_filt_off.buffer_scale(protein_only_avg_filt_off)
+# mean_TR = {key: subtract_unscaled_traces(average_traces(filtered_vectors[key]),average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}
+# for key in mean_TR.keys():
+#     mean_TR[key].SA = mean_TR[key].SA/wt_full[0][1]
+# # mean_TR = {key: mean_TR[key].SA = avg_filt_off.SA/wt_full[0][1] for }
+# for diff in mean_TR.keys():
+#     mean_TR[diff].write_dat(samp+"_diff_"+diff+".dat")
+# #     value.buffer_scale(protein_only_avg_filt_off)
+# showme = {key: add_unscaled_traces(protein_only_avg_filt_off,mean_TR[key]) for key in mean_TR.keys()}
+# # showme["750ns"].write_dat("first_output.dat")
+# # print(showme.keys())
+# for itm in showme.keys():
+#     showme[itm].write_dat(samp+"_"+itm+".dat")
+
+# test01 = protein_only_avg_filt_off.SA/wt_full[0][1]
+
+# print(wt_full)
+# plt.plot(wt_map[0][3].q,protein_only_avg_filt_off.SA, label="corrected")
+plt.plot(wt_map[0][3].q,wt_full[0][1], label=wt_full[0][0])
+plt.plot(wt_map[0][3].q,wt_full[1][1], label=wt_full[1][0])
+plt.plot(wt_map[0][3].q,wt_full[2][1], label=wt_full[2][0])
+# plt.xticks(wt_map[0][3].q)
+plt.xscale('log')
+# plt.yscale('log')
+plt.xlim(0.03, 5)
+# plt.ylim(10,40)
+plt.legend()
+plt.savefig("cypa_wt1_packingfactors.png")
+plt.show()
+
 
 # plot_mean_TR_traces(samp,filtered_vectors)
 
