@@ -49,6 +49,8 @@ def real_space_plotter(samples):
 
     if isinstance(samples,list):
         pass
+    elif isinstance(samples,dict):
+        samples = [item for item in samples.values()]
     else:
         samples = [samples]
     
