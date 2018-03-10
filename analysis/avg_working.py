@@ -41,23 +41,32 @@ t_shortlist = ["-10.1us", "1us", "10us", "100us", "1ms"]
 # t_shortlist = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us"]
 
 
-def sample_map_2(samp_dir):
+def sample_map_multitemp(samp_dir, multitemp=None):
     samp_dir = pathlib.Path(samp_dir)
     samp_files = list(samp_dir.glob(pattern='*.tpkl'))
     # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
     t0 = clock()
     REPS = []
     TIMES = []
+    ITERATIONS = []
+    TEMPS = []
     for file in samp_files:
         name = file.name
         parent = file.parent
-        samp, rep, time, onoff = name.split('_')
+        if multitemp:
+            samp, iteration, temp, rep, time = name.split('_')
+        else:
+            samp, rep, time, onoff = name.split('_')
         # time = time.replace('.tpkl','')
         REPS.append(rep)
         TIMES.append(time)
+        ITERATIONS.append(iteration)
+        TEMPS.append(temp)
 
     REPS = sorted(list(set(REPS)), key=float)
     TIMES = list(set(TIMES))
+    ITERATIONS = sorted(list(set(ITERATIONS)), key=float)
+    TEMPS = sorted(list(set(TEMPS)), key=float)
     OFFS = [item for item in TIMES if "-10us" in item]
     ONS = [item for item in TIMES if "-10us" not in item]
     # OFFS = [item for item in TIMES if "off" in item]
@@ -68,8 +77,7 @@ def sample_map_2(samp_dir):
     clean_ons = [item[1] for item in tup_sort]
     on_off_map = {k:v for k,v in (zip(clean_ons,sorted(OFFS, key=parse.alphanum_key)))}
     # on_off_map = {k:v for k,v in (zip(clean_ons,sorted(OFFS, key=parse.alphanum_key)))}
-
-    return parent, samp, REPS, on_off_map
+    return parent, samp, ITERATIONS, TEMPS, REPS, on_off_map
 
 def sample_map(samp_dir):
     samp_dir = pathlib.Path(samp_dir)
@@ -158,7 +166,7 @@ def iter_vir(samples, full_conc):
     temps = sorted(list(temps))
     concs = [full_conc/1, full_conc/3, full_conc/9]
     conc_map = {"PC0":full_conc/1, "PC1":full_conc/3, "PC2":full_conc/9 }
-    I0q_output = []
+    q_output = []
     a2_output = []
     spf_output = []
     for temp in temps:
@@ -303,10 +311,10 @@ def subtract_unscaled_traces(trace_one,trace_two):
     return output
 
 
-def time_resolved_traces(parent, samp, reps, on_off_map, option=None):
+def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, iterations=None, temps=None):
     
     subtracted_vectors = {i: [] for i in on_off_map.keys()}
-
+    
     for n in reps:
         for on, off in on_off_map.items():
 
@@ -315,6 +323,9 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None):
                 on_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, on))
             else:
                 on_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, on))
+
+            if multitemp:
+                on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, on))
             try:
                 on_data = parse.parse(on_string)
                 on_data.alg_scale(reference)
@@ -327,6 +338,11 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None):
                 off_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, off))
             else:
                 off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
+            
+            if multitemp:
+                on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, off))
+
+            
             try:
                 off_data = parse.parse(off_string)
                 off_data.alg_scale(reference)
@@ -483,21 +499,23 @@ def unpack(packed_trace):
 
 ########
 t0 = clock()
+
+script,data_dir = argv
 # parent, samp, reps, on_off_map = sample_map("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/")
 # parent, samp, reps, on_off_map = sample_map(directory)
-data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/"
+#data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/"
 # data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-2/xray_images/"
 
-parent, samp, reps, on_off_map = sample_map(data_dir)
+parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(data_dir)
 subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map)
 filtered_vectors = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
 
 all_off_vectors = all_off_traces(parent, samp, reps, on_off_map)
 filtered_off_vectors = iterative_chi_filter(all_off_vectors)
 
-buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-1/xray_images/"
+#buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-1/xray_images/"
 # buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-Buffer-2/xray_images/"
-parent2, samp2, reps2, on_off_map2 = sample_map(buffer_dir)
+parent2, samp2, interations2, temps2, reps2, on_off_map2 = sample_map_multitemp(buffer_dir)
 buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2)
 buffer_filtered_vectors = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
 buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2)
