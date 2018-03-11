@@ -9,6 +9,7 @@ from trace import Trace
 from pandas import read_table,DataFrame
 import numpy as np
 import re
+# from table import table
 
 # Q = [0.0175 + 0.0025 * i for i in range(2125)]
 # print Q
@@ -18,7 +19,7 @@ def parse(filename):
     tpkl. Just passes through to the appropriate place based on the `mode` 
     variable."""
     if filename.endswith("tpkl"):
-        return parse_tpkl(filename)
+        return parse_tpkl_2(filename)
     elif filename.endswith("dat"):
         return parse_dat(filename)
     else:
@@ -46,11 +47,13 @@ dt = np.dtype({'names': ['q','S','sigS','SA','sigSA','Nj'],
 def parse_tpkl_2(filename):
     """Loads tpkl files and generates a corresponding Trace object.
     """
-    TPKL_HEADER_BYTES = 279 ### this value could vary
+    # TPKL_HEADER_BYTES = 279 ### this value could vary...original value
+    TPKL_HEADER_BYTES = 290 ### march 2018
     with open(filename, "rb") as f:
         f.seek(TPKL_HEADER_BYTES)
         data = np.fromfile(f, dtype=dt)
-    return DataFrame.from_records(data)
+        d2 = DataFrame.from_records(data)
+    return Trace(d2.q, d2.sigS, d2.S, d2.sigSA, d2.SA, d2.Nj)
 
 def parse_tpkl(filename):
     """Loads tpkl files and generates a corresponding Trace object.

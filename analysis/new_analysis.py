@@ -45,7 +45,7 @@ def guinier_plotter(sample):
     plt.show()
     return
 
-def real_space_plotter(samples):
+def real_space_plotter(samples, name=None):
 
     if isinstance(samples,list):
         pass
@@ -126,6 +126,7 @@ def real_space_plotter(samples):
     plt.legend()
     plt.tight_layout()
     plt.subplots_adjust(top=0.85)
+    plt.savefig(name+"_real-space-plots.png", dpi=300)
     plt.show()
     return
 

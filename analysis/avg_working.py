@@ -28,22 +28,26 @@ import numpy as np
 from numpy.linalg import svd
 from trace import Trace
 from new_analysis import real_space_plotter
+import pickle
 
 
 # script, directory = sys.argv
 # reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
-reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
+# reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
 # reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-1/xray_images/CypA-S99T-1_9_75ns_off.tpkl")
+reference = parse.parse("/Volumes/LaCie/radial_averages/Lysozyme-apo/Lysozyme-apo-Buffer-1/xray_images/Lysozyme-apo-Buffer-1_2_3C_1_23.7us.tpkl")
 
 CHI_OUTLIER = 1.5
 t_shortlist = ["-10.1us", "1us", "10us", "100us", "1ms"]
 # t_shortlist = ["562ns"]
 # t_shortlist = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us"]
+TIMES = [ "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us", "316us", "422us", "562us"]
+
 
 
 def sample_map_multitemp(samp_dir, multitemp=None):
     samp_dir = pathlib.Path(samp_dir)
-    samp_files = list(samp_dir.glob(pattern='*.tpkl'))
+    samp_files = list(samp_dir.glob(pattern='**/*.tpkl'))
     # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
     t0 = clock()
     REPS = []
@@ -55,6 +59,7 @@ def sample_map_multitemp(samp_dir, multitemp=None):
         parent = file.parent
         if multitemp:
             samp, iteration, temp, rep, time = name.split('_')
+            time = time.replace('.tpkl','')
         else:
             samp, rep, time, onoff = name.split('_')
         # time = time.replace('.tpkl','')
@@ -66,7 +71,7 @@ def sample_map_multitemp(samp_dir, multitemp=None):
     REPS = sorted(list(set(REPS)), key=float)
     TIMES = list(set(TIMES))
     ITERATIONS = sorted(list(set(ITERATIONS)), key=float)
-    TEMPS = sorted(list(set(TEMPS)), key=float)
+    TEMPS = list(set(TEMPS))
     OFFS = [item for item in TIMES if "-10us" in item]
     ONS = [item for item in TIMES if "-10us" not in item]
     # OFFS = [item for item in TIMES if "off" in item]
@@ -311,51 +316,91 @@ def subtract_unscaled_traces(trace_one,trace_two):
     return output
 
 
-def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, iterations=None, temps=None):
+def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, iterations=None, temp=None):
     
     subtracted_vectors = {i: [] for i in on_off_map.keys()}
     
-    for n in reps:
-        for on, off in on_off_map.items():
+    if multitemp:
+        for iteration in iterations:
+            for n in reps:
+                for on, off in on_off_map.items():
 
-            # on_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, on))
-            if option:
-                on_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, on))
-            else:
-                on_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, on))
+                    # on_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, on))
+                    on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, on))
+                    # if option:
+                    #     on_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, on))
+                    # else:
+                    #     on_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, on))
 
-            if multitemp:
-                on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, on))
-            try:
-                on_data = parse.parse(on_string)
-                on_data.alg_scale(reference)
-            except:
-                print(on_string+"\tfailed")
-                pass
+                    # if multitemp:
+                    #     on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, on))
+                    try:
+                        on_data = parse.parse(on_string)
+                        on_data.alg_scale(reference)
+                    except:
+                        print(on_string+"\tfailed")
+                        pass
 
-            # off_string = ("{0}/{1}_{2}_{3}_off.tpkl".format(parent, samp, n, off))
-            if option:
-                off_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, off))
-            else:
-                off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
-            
-            if multitemp:
-                on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, off))
+                    # off_string = ("{0}/{1}_{2}_{3}_off.tpkl".format(parent, samp, n, off))
+                    off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, off))
+                    # if option:
+                    #     off_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, off))
+                    # else:
+                    #     off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
+                    
+                    # if multitemp:
+                    #     off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, off))
+                    
+                    try:
+                        off_data = parse.parse(off_string)
+                        off_data.alg_scale(reference)
+                    except:
+                        print(off_string+"\tfailed")
+                        pass
 
-            
-            try:
-                off_data = parse.parse(off_string)
-                off_data.alg_scale(reference)
-            except:
-                print(off_string+"\tfailed")
-                pass
+                    if isinstance(on_data,type(None)) or isinstance(off_data,type(None)):
+                        print(on_string+"\tfailed")
+                        pass
+                    else:
+                        sub_scaled = subtract_scaled_traces(on_data,off_data)
+                        subtracted_vectors[on].append(sub_scaled)
 
-            if isinstance(on_data,type(None)) or isinstance(off_data,type(None)):
-                print(on_string+"\tfailed")
-                pass
-            else:
-                sub_scaled = subtract_scaled_traces(on_data,off_data)
-                subtracted_vectors[on].append(sub_scaled)
+    else:
+        for n in reps:
+            for on, off in on_off_map.items():
+
+                if option:
+                    on_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, on))
+                else:
+                    on_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, on))
+
+                try:
+                    on_data = parse.parse(on_string)
+                    on_data.alg_scale(reference)
+                except:
+                    print(on_string+"\tfailed")
+                    pass
+
+
+                if option:
+                    off_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, off))
+                else:
+                    off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
+                
+                
+                try:
+                    off_data = parse.parse(off_string)
+                    off_data.alg_scale(reference)
+                except:
+                    print(off_string+"\tfailed")
+                    pass
+
+                if isinstance(on_data,type(None)) or isinstance(off_data,type(None)):
+                    print(on_string+"\tfailed")
+                    pass
+                else:
+                    sub_scaled = subtract_scaled_traces(on_data,off_data)
+                    subtracted_vectors[on].append(sub_scaled)
 
     return subtracted_vectors
 
@@ -406,27 +451,98 @@ def static_traces(parent, samp, reps, temps, series, option=None):
 
     return static_vectors
 
-def all_off_traces(parent, samp, reps, on_off_map, option=None):
+def all_off_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, iterations=None, temp=None):
     
     off_vectors = []
 
-    for n in reps:
-        for off in on_off_map.values():
+    if multitemp:
+        for iteration in iterations:
 
-            # off_string = ("{0}/{1}_{2}_{3}_off.tpkl".format(parent, samp, n, off))
-            if option:
-                off_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, off))
-            else:
-                off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
-            try:
-                off_data = parse.parse(off_string)
-                off_data.alg_scale(reference)
-                off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
-                off_vectors.append(off_scaled)
-            except:
-                print(off_string+"\tfailed")
+            for n in reps:
+                for off in on_off_map.values():
+
+                    off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, off))
+                    try:
+                        off_data = parse.parse(off_string)
+                        off_data.alg_scale(reference)
+                        off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
+                        off_vectors.append(off_scaled)
+                    except:
+                        print(off_string+"\tfailed")
+
+    else:
+        for n in reps:
+                    for off in on_off_map.values():
+
+                        # off_string = ("{0}/{1}_{2}_{3}_off.tpkl".format(parent, samp, n, off))
+                        if option:
+                            off_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, off))
+                        else:
+                            off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
+                        try:
+                            off_data = parse.parse(off_string)
+                            off_data.alg_scale(reference)
+                            off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
+                            off_vectors.append(off_scaled)
+                        except:
+                            print(off_string+"\tfailed")
 
     return off_vectors
+
+def all_vectors(parent, samp, reps, on_off_map, option=None, multitemp=None, iterations=None, temp=None):
+    
+    all_vectors = []
+    all_labels = []
+    tr_vectors_labels = []
+
+
+    if multitemp:
+        for iteration in iterations:
+
+            for n in reps:
+                # for off in on_off_map.values():
+                for on, off in on_off_map.items():
+                    on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, on))
+                    off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, off))
+                    try:
+                        on_data = parse.parse(on_string)
+                        on_data.alg_scale(reference, overwrite=True)
+
+                        off_data = parse.parse(off_string)
+                        off_data.alg_scale(reference, overwrite=True)
+                        # off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
+                        # off_vectors.append(off_scaled)
+                        if on_data:
+                            if off_data:
+                                all_vectors.append(off_data.SA[reference.q>0.03])
+                                all_labels.append(off)
+                                all_vectors.append(on_data.SA[reference.q>0.03])
+                                all_labels.append(on)
+                                sub_scaled = subtract_scaled_traces(on_data,off_data)
+                                tr_vectors_labels.append((sub_scaled, on))
+
+
+                    except:
+                        print(off_string+"\tfailed")
+
+    # else:
+    #     for n in reps:
+    #                 for off in on_off_map.values():
+
+    #                     # off_string = ("{0}/{1}_{2}_{3}_off.tpkl".format(parent, samp, n, off))
+    #                     if option:
+    #                         off_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, off))
+    #                     else:
+    #                         off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
+    #                     try:
+    #                         off_data = parse.parse(off_string)
+    #                         off_data.alg_scale(reference)
+    #                         off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
+    #                         off_vectors.append(off_scaled)
+    #                     except:
+    #                         print(off_string+"\tfailed")
+
+    return all_vectors, all_labels, tr_vectors_labels
 
 
 def plot_all_traces(samp, trace_lib):
@@ -497,219 +613,172 @@ def unpack_traces(sampling):
 def unpack(packed_trace):
     return(packed_trace.SA,packed_trace.sigSA)
 
-########
-t0 = clock()
-
-script,data_dir = argv
-# parent, samp, reps, on_off_map = sample_map("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/")
-# parent, samp, reps, on_off_map = sample_map(directory)
-#data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/"
-# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-2/xray_images/"
-
-parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(data_dir)
-subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map)
-filtered_vectors = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
-
-all_off_vectors = all_off_traces(parent, samp, reps, on_off_map)
-filtered_off_vectors = iterative_chi_filter(all_off_vectors)
-
-#buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-1/xray_images/"
-# buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-Buffer-2/xray_images/"
-parent2, samp2, interations2, temps2, reps2, on_off_map2 = sample_map_multitemp(buffer_dir)
-buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2)
-buffer_filtered_vectors = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
-buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2)
-buffer_filtered_off_vectors = iterative_chi_filter(buffer_all_off_vectors)
+################################################################################
 
 
-
-avg_filt_off = average_traces(filtered_off_vectors)
-avg_filt_off.buffer_scale(avg_filt_off)
-buff_avg_filt_off = average_traces(buffer_filtered_off_vectors)
-buff_avg_filt_off.buffer_scale(avg_filt_off)
-protein_only_avg_filt_off = buffer_subtract_scaled_traces(avg_filt_off,buff_avg_filt_off)
-# protein_only_avg_filt_off.buffer_scale(protein_only_avg_filt_off)
-mean_TR = {key: subtract_unscaled_traces(average_traces(filtered_vectors[key]),average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}
-for diff in mean_TR.keys():
-    mean_TR[diff].write_dat(samp+"_diff_"+diff+".dat")
-#     value.buffer_scale(protein_only_avg_filt_off)
-showme = {key: add_unscaled_traces(protein_only_avg_filt_off,mean_TR[key]) for key in mean_TR.keys()}
-# showme["750ns"].write_dat("first_output.dat")
-# print(showme.keys())
-for itm in showme.keys():
-    showme[itm].write_dat(samp+"_"+itm+".dat")
-
-real_space_plotter(showme)
-
-############
-
-# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-static-1/xray_images/"
-
-# parent, samp, reps, temps, series = static_map(data_dir)
-
-###########
-
-# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-static-1/xray_images/"
-# wt_map = static_map(data_dir)
-# wt_full = iter_vir(wt_map, 50)
-
-# data_dir_2 = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-static-2/xray_images/"
-# s99_map = static_map(data_dir_2)
-# s99_full = iter_vir(s99_map, 50)
-
-# parent, samp, REPS, TEMPS, SERIES = static_map(data_dir_2)
-# test01 = static_traces(parent, samp, REPS, TEMPS, SERIES)
-# print(test01)
-
+################################################################################
+###working version of multitemp march 10th, 2018###
 # t0 = clock()
-# parent, samp, reps, on_off_map = sample_map("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/")
-# parent, samp, reps, on_off_map = sample_map(directory)
-# data_dir2 = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/"
-# data_dir2 = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-2/xray_images/"
 
-# parent, samp, reps, on_off_map = sample_map(data_dir2)
-# subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map)
-# filtered_vectors = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
+# script,data_dir,buffer_dir= sys.argv
 
-# all_off_vectors = all_off_traces(parent, samp, reps, on_off_map)
-# filtered_off_vectors = iterative_chi_filter(all_off_vectors)
+# parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(data_dir, multitemp=True)
+# filtered_off_vectors = {}
+# filtered_vectors = {}
+# for temp in temps:
+#     subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map, multitemp=True, iterations=iterations, temp=temp)
+#     filtered_vectors[temp] = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
+#     all_off_vectors = all_off_traces(parent, samp, reps, on_off_map, multitemp=True, iterations=iterations, temp=temp)
+#     filtered_off_vectors[temp] = iterative_chi_filter(all_off_vectors)
 
-# # buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-1/xray_images/"
-# buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-Buffer-2/xray_images/"
-# parent2, samp2, reps2, on_off_map2 = sample_map_2(buffer_dir)
-# buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2, option=True)
-# buffer_filtered_vectors = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
-# buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2, option=True)
-# buffer_filtered_off_vectors = iterative_chi_filter(buffer_all_off_vectors)
+# with open("filtered_off_vectors_dict.pkl", "wb") as pkl:
+#     pickle.dump(filtered_off_vectors, pkl)
+# with open("filtered_vectors_dict.pkl", "wb") as pkl:
+#     pickle.dump(filtered_vectors, pkl)
 
+# parent2, samp2, iterations2, temps2, reps2, on_off_map2 = sample_map_multitemp(buffer_dir, multitemp=True)
+# buffer_filtered_off_vectors = {}
+# buffer_filtered_vectors = {}
+# for temp2 in temps2:
+#     buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2, multitemp=True, iterations=iterations2, temp=temp2)
+#     buffer_filtered_vectors[temp2] = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
+#     buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2, multitemp=True, iterations=iterations2, temp=temp2)
+#     buffer_filtered_off_vectors[temp2] = iterative_chi_filter(buffer_all_off_vectors)
 
-
-# avg_filt_off = average_traces(filtered_off_vectors)
-# avg_filt_off.SA = avg_filt_off.SA/s99_full[0][1]
-# avg_filt_off.buffer_scale(avg_filt_off)
-# buff_avg_filt_off = average_traces(buffer_filtered_off_vectors)
-# buff_avg_filt_off.buffer_scale(avg_filt_off)
-# protein_only_avg_filt_off = buffer_subtract_scaled_traces(avg_filt_off,buff_avg_filt_off)
-# protein_only_avg_filt_off.buffer_scale(protein_only_avg_filt_off)
-# mean_TR = {key: subtract_unscaled_traces(average_traces(filtered_vectors[key]),average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}
-# for key in mean_TR.keys():
-#     mean_TR[key].SA = mean_TR[key].SA/s99_full[0][1]
-# # mean_TR = {key: mean_TR[key].SA = avg_filt_off.SA/wt_full[0][1] for }
-# for diff in mean_TR.keys():
-#     mean_TR[diff].write_dat(samp+"_diff_"+diff+".dat")
-# #     value.buffer_scale(protein_only_avg_filt_off)
-# showme = {key: add_unscaled_traces(protein_only_avg_filt_off,mean_TR[key]) for key in mean_TR.keys()}
-# # showme["750ns"].write_dat("first_output.dat")
-# # print(showme.keys())
-# for itm in showme.keys():
-#     showme[itm].write_dat(samp+"_"+itm+".dat")
-
-# test01 = protein_only_avg_filt_off.SA/wt_full[0][1]
-
-# print(wt_full)
-# # plt.plot(wt_map[0][3].q,protein_only_avg_filt_off.SA, label="corrected")
-# plt.plot(wt_map[0][3].q,wt_full[0][1], label=wt_full[0][0])
-# plt.plot(wt_map[0][3].q,wt_full[1][1], label=wt_full[1][0])
-# plt.plot(wt_map[0][3].q,wt_full[2][1], label=wt_full[2][0])
-
-# plt.plot(s99_map[0][3].q,s99_full[0][1], label=s99_full[0][0])
-# plt.plot(s99_map[0][3].q,s99_full[1][1], label=s99_full[1][0])
-# plt.plot(s99_map[0][3].q,s99_full[2][1], label=s99_full[2][0])
-# # plt.plot(s99_map[0][3].q,s99_full[3][1], label=s99_full[3][0])
-# # # plt.xticks(wt_map[0][3].q)
-# plt.xscale('log')
-# # plt.yscale('log')
-# plt.xlim(0.03, 5)
-# # plt.ylim(10,40)
-# plt.legend()
-# plt.savefig("cypa_s99t_packingfactors.png")
-# plt.show()
+# with open("buffer_filtered_off_vectors_dict.pkl", "wb") as pkl:
+#     pickle.dump(buffer_filtered_off_vectors, pkl)
+# with open("buffer_filtered_vectors_dict.pkl", "wb") as pkl:
+#     pickle.dump(buffer_filtered_vectors, pkl)
 
 
-# plot_mean_TR_traces(samp,filtered_vectors)
+# avg_filt_off = {temp:average_traces(filtered_off_vectors[temp]) for temp in filtered_off_vectors.keys()}
+# for key in avg_filt_off.keys():
+#     avg_filt_off[key].buffer_scale(avg_filt_off[key])
+# with open("avg_filt_off_dict.pkl", "wb") as pkl:
+#     pickle.dump(avg_filt_off, pkl)
+
+# buff_avg_filt_off = {temp:average_traces(buffer_filtered_off_vectors[temp]) for temp in buffer_filtered_off_vectors.keys()}
+# for key in buff_avg_filt_off.keys():
+#     buff_avg_filt_off[key].buffer_scale(avg_filt_off[key])
+# with open("buff_avg_filt_off_dict.pkl", "wb") as pkl:
+#     pickle.dump(buff_avg_filt_off, pkl)
 
 
+# protein_only_avg_filt_off = {temp:buffer_subtract_scaled_traces(avg_filt_off[temp],buff_avg_filt_off[temp]) for temp in filtered_off_vectors.keys()}
 
-# plot_all_traces(samp,subtracted_vectors)
-# for key in filtered_vectors.keys():
-#     print("{} has {} vectors".format(key, len(filtered_vectors[key])))
-
-
+# with open("protein_only_avg_filt_off_dict.pkl", "wb") as pkl:
+#     pickle.dump(protein_only_avg_filt_off, pkl)
 
 
-# t1 = clock()
-# print("TR signal scaled & plotted for {:20s} took {:4.2f} seconds".format(samp, t1-t0))
+# mean_TR = {temp:{key: subtract_unscaled_traces(average_traces(filtered_vectors[temp][key]),average_traces(buffer_filtered_vectors[temp][key])) for key in filtered_vectors[temp].keys()} for temp in filtered_off_vectors.keys()}
+# for temp in mean_TR.keys():
+#     for  diff in mean_TR[temp].keys():
+#         mean_TR[temp][diff].write_dat(samp+"_"+temp+"_diff_"+diff+".dat")
+
+# with open("mean_TR_dict.pkl", "wb") as pkl:
+#     pickle.dump(mean_TR, pkl)
+
+# showme = {temp:{key: add_unscaled_traces(protein_only_avg_filt_off[temp],mean_TR[temp][key]) for key in mean_TR[temp].keys()} for temp in filtered_off_vectors.keys()}
+
+# for temp in showme.keys():
+#     for itm in showme[temp].keys():
+#         showme[temp][itm].write_dat(samp+"_"+temp+"_"+itm+".dat")
+
+# with open("TR-plus-avg_dict.pkl", "wb") as pkl:
+#     pickle.dump(showme, pkl)
+
+# for temp in showme.keys():
+#     real_space_plotter(showme[temp],temp)
 
 
-# # matrix = np.matrix([i[0][6:] for i in vectors]).transpose()
-# # # matrix = np.matrix(subbed_vectors).transpose()
+################################################################################
+###SVD analysis###
+script,data_dir= sys.argv
 
-# # u,s,v = svd(matrix, full_matrices=False)
+parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(data_dir, multitemp=True)
+multi_all_vectors = {}
+multi_all_labels = {}
+tr_vectors_labels = {}
+# filtered_vectors = {}
+for temp in temps:
+    multi_all_vectors[temp], multi_all_labels[temp], tr_vectors_labels[temp] = all_vectors(parent, samp, reps, on_off_map, multitemp=True, iterations=iterations, temp=temp)
 
-
-# # fig3, ax3 = plt.subplots()
-# # i = 0
-# # for vector in v.tolist()[0:5]:
-# #     ax3.plot([value+i*0.3 for value in vector], "-")
-# #     i+=1
-# # fig3.savefig("timepoints.png")
-
-# # fig4, ax4 = plt.subplots()
-# # j = 0
-
-# # for vector in u.transpose().tolist()[0:5]:
-# #     x = on_data.q[6:]    
-# #     ax4.plot(x, [value for value in vector], "-")
-# #     j+=0.3
-# # ax4.set_xscale("log")
-# # fig4.savefig("Singular_vectors_WT_HD_Unscaled.png")
-
-# # zero_vector_values_on = v.tolist()[0][1::2]
-# # zero_vector_values_off = v.tolist()[0][0::2]
-# # average_on = np.average(zero_vector_values_on)
-# # std_on = np.std(zero_vector_values_on)
-# # average_off =  np.average(zero_vector_values_off)
-# # std_off = np.std(zero_vector_values_off)
-# # print(average_on, average_off, std_on, std_off)
-# # for index, value in enumerate(v.tolist()[0]):
-# #     if index % 2 == 0:
-# #         if np.fabs((value - average_off) / std_off) > 2.5:
-# #             print(vectors[index][1])
-# #             print(vectors[index][2])
-# #     elif index % 2 == 1:
-# #         if np.fabs((value - average_on) / std_on) > 2.5:
-# #             print(vectors[index][1])
-# #             print(vectors[index][2])
+full_list = multi_all_vectors['19C']
+full_labels = multi_all_labels['19C']
+# print(full_labels)
 
 
+fig0, ax0 = plt.subplots()
+all_curves = [list(zip(reference.q[reference.q>0.03],item)) for item in full_list]
+# print(all_curves[0])
+line_segments = LineCollection(all_curves,color="green",lw=0.5)
+ax0.add_collection(line_segments)
+ax0.plot()
+# ax0.scatter(reference.q,full_list)
+fig0.savefig("scaled_radavgs.png", dpi=300)
+plt.show(block=False)
+
+
+u,s,v = svd(full_list, full_matrices=False)
+fig, ax = plt.subplots()
+i = 0
+#print("xx shape = {}".format(xx.shape))
+for vector in v[0:8]:
+    # print vector
+    #print("vector shape = {}".format(vector.shape))
+    # ax.plot(range(len(vectors)), [value+i for value in vector], "-")
+    ax.plot(reference.q[reference.q>0.03], vector+i*0.1, "-", label = "v{}".format(i), lw=0.7)
+    i+=1
+plt.legend()
+ax.set_xscale('log')
+#fig.savefig("{}_svd.png".format(run_numb))
+fig.savefig("singular_vectors.png", dpi=300)
+plt.show(block=False)
+
+#np.save("time_dep_vector", v[2])
+
+fig2, ax2 = plt.subplots()
+i = 0
+for vector in u.T[0:4]:
+    # print vector
+    # ax.plot(range(len(vectors)), [value+i for value in vector], "-")
+    # x = [i*0.025 for i in range(len(vector))] 
+    ax2.plot(vector, label = "v{}".format(i), lw=0.5)
+    # ax2.scatter(light, vector[light]+i*.3, marker='+', color='red', edgecolors="none", s=2, label = "v{} light".format(i))
+    i+=1
+#plt.legend()
     
-# # fig5, ax5= plt.subplots()
-# # ax5.plot([np.log(i) for i in s][0:10], "-")
-# # fig5.savefig("Singular_values_WT_HD_Unscaled.png")
+#fig2.savefig("{}_result.png".format(run_numb))
+fig2.savefig("vector_per_image.png", dpi=300)
+fig2.set_figwidth(15)
+fig3, ax3= plt.subplots()
+ax3.plot([np.log(i) for i in s][0:8], "-")
+#fig3.savefig("{}_singular_values.png".format(run_numb))
+fig3.savefig("singular_values.png")
+plt.show(block=False)
+#plt.show(figsize(10,10),dpi=300)
+    # print i
+    # print ordered_keylist
+#fig2.show()
+fig4, ax4 = plt.subplots()
+i = 0
 
-# # fig6, ax6 = plt.subplots()
-# # ax6.axhline(average_on+2.5*std_on)
-# # ax6.axhline(average_on-2.5*std_on)
-# # ax6.axhline(average_on, color="0.5")
-# # ax6.plot(zero_vector_values_on)
-# # fig6.savefig("On_vectors.png")
-# # ax6.cla()
-# # ax6.axhline(average_off+2.5*std_off)
-# # ax6.axhline(average_off-2.5*std_off)
-# # ax6.axhline(average_off, color="0.5")
-# # ax6.plot(zero_vector_values_off)
-# # fig6.savefig("Off_vectors.png")
-# # ax6.cla()
-# # ax6.axhline(average_off+2.5*std_off)
-# # ax6.axhline(average_off-2.5*std_off)
-# # ax6.axhline(average_off, color="0.5")
-# # ax6.plot(v.tolist()[0])
-# # fig6.savefig("All_vectors_off_lines.png")
-
-
-# from new_analysis import real_space_plotter
-# # mean_traces = [average_traces(filtered_vectors[key]) for key in filtered_vectors.keys()]
-# mean_trace = [average_traces(filtered_vectors['422us'])]
-# real_space_plotter(mean_trace)
-
-
+time_resolved_vectors = {}
+for vector in u.T[0:8]:
+    for time in TIMES:
+        time_resolved_vectors[time] = np.mean(np.array(vector[full_labels.index(time)]))
+        ax4.scatter(parse.times_numeric(time),np.mean(np.subtract(np.array(vector[full_labels.index(time)]), np.array(vector[full_labels.index(time)-1]))), color="black", label=time)
+    # print vector
+    # ax.plot(range(len(vectors)), [value+i for value in vector], "-")
+    # x = [i*0.025 for i in range(len(vector))] 
+        # ax4.hist(vector[full_labels.index(time)], 100, color='blue', alpha=0.5, label = "v{}".format(str(i)+'_'+str(time)))
+    # ax4.hist(vector[light], 500, color='red', alpha=0.5, label = "v{} light".format(i))
+    ax4.set_xscale('log')
+    ax4.set_xlabel('Time (ns)')
+    # plt.legend()
+    fig4.savefig("v{}_time_dependence.png".format(i), dpi=300)
+    # plt.show()
+    
+    i+=1
+    ax4.cla()
+plt.show()
