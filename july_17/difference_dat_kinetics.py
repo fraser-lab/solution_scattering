@@ -3,6 +3,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
+from nonlinear_curve_fitting import fit_kinetics
 from parse import parse
 import trace
 
@@ -65,7 +66,17 @@ def integrate_area(trace, q_min = 0.03, q_max = 0.06):
 
 
 def measure_kinetics(trace):
-	return trace
+	if trace.sigSA:
+		y = trace.sigSA
+	else:
+		y = trace.SA
+
+	x = trace.q
+
+	popt, pcov = fit_kinetics(x,y)
+	print popt
+	print pcov
+	return popt,pcov
 
 def run(prefix, times_str):
 	traces = []
