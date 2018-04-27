@@ -26,13 +26,15 @@ def time_str_to_float(time_string):
   return scaled_number
 
 
-def plot_integrated_areas(tuple_list, filename = "integrated_area_over_time.png"):
+def plot_integrated_areas(tuple_list, filename = "integrated_area_over_time.png", popt=None):
 	# Tuple list should be of the form [(time_numeric, trace, integrated area, integrated error),(),...]
 	fig, ax = plt.subplots()
 	x, _, y, yerr = zip(*tuple_list)
 	curve = ax.errorbar(x[1:],[-i for i in y[1:]], fmt=".", yerr=yerr[1:])
 	ax.set_xscale('log')
 	ax.set_xlim(x[1], x[-1])
+	if not popt==None:
+		ax.plot(x[1:], [-1*two_step_relaxation(i, *popt) for i in x[1:]])
 	fig.savefig(filename)
 	return fig,ax
 
@@ -98,14 +100,19 @@ def run(prefix, times_str):
 		time_numeric = time_str_to_float(time)
 		area, error = integrate_area(trace)
 		traces.append((time_numeric,trace, area, error))
-	plot_integrated_areas(traces)
+	
 	plot_differences(traces)
 	times,_,areas,errors = zip(*traces)
-	popt, pcov = scipy.optimize.curve_fit(single_step_relaxation, times[8:22], areas[8:22], method='lm', p0=[-100,0,-100], maxfev=50000)
-	rranges = ((-100.0, 20.0), (-100.0, 20.0), (-100.0, 20.0))
-	best_params = scipy.optimize.minimize(least_squares_error,rranges,method='Powell')
+	popt, pcov = scipy.optimize.curve_fit(two_step_relaxation, times[1:], areas[1:], sigma=errors[1:], method='lm', p0=[-100,1./1000,-100, 1./10000, -100], maxfev=50000)
+	# rranges = ((-100.0, 20.0), (-100.0, 20.0), (-100.0, 20.0))
+	# best_params = scipy.optimize.minimize(least_squares_error,rranges,method='Powell')
+	plot_integrated_areas(traces, popt=popt)
 	print popt
-	print best_params
+	print "k1: {}us, k1_min: {}us, k1_max: {}us".format(1./popt[1]/1000, 1./(popt[1]+np.sqrt(pcov[1,1]))/1000, 1./(popt[1]-np.sqrt(pcov[1,1]))/1000)
+	print "k2: {}us, k2_min: {}us, k2_max: {}us".format(1./popt[3]/1000, 1./(popt[3]+np.sqrt(pcov[3,3]))/1000, 1./(popt[3]-np.sqrt(pcov[3,3]))/1000)
+
+	# print "k2: {}us, k2err:{}us".format(1./popt[3]/1000, 1./(popt[np.sqrt(pcov[3,3])/1000)
+	# print best_params
 
 
 if __name__ == "__main__":
