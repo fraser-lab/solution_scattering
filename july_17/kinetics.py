@@ -108,8 +108,10 @@ def run(prefix, times_str):
 	# best_params = scipy.optimize.minimize(least_squares_error,rranges,method='Powell')
 	plot_integrated_areas(traces, popt=popt)
 	print popt
-	print "k1: {}us, k1_min: {}us, k1_max: {}us".format(1./popt[1]/1000, 1./(popt[1]+np.sqrt(pcov[1,1]))/1000, 1./(popt[1]-np.sqrt(pcov[1,1]))/1000)
-	print "k2: {}us, k2_min: {}us, k2_max: {}us".format(1./popt[3]/1000, 1./(popt[3]+np.sqrt(pcov[3,3]))/1000, 1./(popt[3]-np.sqrt(pcov[3,3]))/1000)
+	print "t1: {}us, t1_min: {}us, t1_max: {}us".format(1./popt[1]/1000, 1./(popt[1]+np.sqrt(pcov[1,1]))/1000, 1./(popt[1]-np.sqrt(pcov[1,1]))/1000)
+	print "k1: {}, k1err: {}".format(popt[1], np.sqrt(pcov[1,1]))
+	print "t2: {}us, t2_min: {}us, t2_max: {}us".format(1./popt[3]/1000, 1./(popt[3]+np.sqrt(pcov[3,3]))/1000, 1./(popt[3]-np.sqrt(pcov[3,3]))/1000)
+	print "k2: {}, k2err: {}".format(popt[3], np.sqrt(pcov[3,3]))
 
 	# print "k2: {}us, k2err:{}us".format(1./popt[3]/1000, 1./(popt[np.sqrt(pcov[3,3])/1000)
 	# print best_params
