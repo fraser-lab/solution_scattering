@@ -25,7 +25,8 @@ def parse(filename):
         raise TypeError('scattering data can only be read from the following filetypes *.tpkl, *.dat')
 
 def parse_dat(filename):
-    data = read_table(filename, delimiter="    ", engine='python', skiprows=1, names=['q','I','sigI'])
+    # data = read_table(filename, delimiter="    ", engine='python', skiprows=1, names=['q','I','sigI'])
+    data = read_table(filename, delim_whitespace=True, engine='python', skiprows=1, names=['q','I','sigI'])
     q = data.q
     SA = data.I
     sigSA = data.sigI

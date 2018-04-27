@@ -1,5 +1,5 @@
 import glob
-import matplotlib.pyplot as pyplot
+import matplotlib.pyplot as plt
 import pandas as pd
 
 diffs = glob.glob('./*diff*')

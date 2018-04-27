@@ -29,13 +29,35 @@ from numpy.linalg import svd
 from trace import Trace
 from new_analysis import real_space_plotter
 import pickle
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+
+
+### Setup command-line input flags and help messages
+
+parser = ArgumentParser(usage='python3 avg_working.py [options]', description='Analyze time-resolved solution scattering data.', formatter_class=RawDescriptionHelpFormatter)
+parser.add_argument('-tr', '--time_resolved_differences', help='create average traces for each time point, with matching buffer subtraction', action='store_true')
+parser.add_argument('-svd', help='singular value decomposition of a series of traces', action='store_true')
+parser.add_argument('-mt', '--multitemp', help='Multiple temperatures within each sample directory', action='store_true')
+parser.add_argument('-s', '--sample_directory', help='location of files to be analyzed')
+parser.add_argument('-b', '--buffer_directory', help='location of matching buffer files for TR analysis')
+parser.add_argument('-r', '--reference', help='Provide a reference image for scaling. If no reference is provided an arbitray image will be chosen to scale all others against.')
+
+
+args = parser.parse_args()
 
 
 # script, directory = sys.argv
 # reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
 # reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
 # reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-1/xray_images/CypA-S99T-1_9_75ns_off.tpkl")
-reference = parse.parse("/Volumes/LaCie/radial_averages/Lysozyme-apo/Lysozyme-apo-Buffer-1/xray_images/Lysozyme-apo-Buffer-1_2_3C_1_23.7us.tpkl")
+# reference = parse.parse("/Volumes/beryllium/aps_march2018/Lysozyme/Lysozyme-apo/Lysozyme-apo-Buffer-1/xray_images/Lysozyme-apo-Buffer-1_2_3C_1_23.7us.tpkl")
+reference = parse.parse("/Volumes/beryllium/aps_march2018/Lysozyme_reintegrated/Lysozyme-apo-Buffer-1/xray_images/Lysozyme-apo-Buffer-1_5_3C_5_237us.tpkl")
+
+if args.reference:
+    reference = parse.parse(args.reference)
+else:
+    pass
+
 
 CHI_OUTLIER = 1.5
 t_shortlist = ["-10.1us", "1us", "10us", "100us", "1ms"]
@@ -506,10 +528,12 @@ def all_vectors(parent, samp, reps, on_off_map, option=None, multitemp=None, ite
                     off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, off))
                     try:
                         on_data = parse.parse(on_string)
-                        on_data.alg_scale(reference, overwrite=True)
+                        on_data = Trace(on_data.q, np.empty_like(on_data.q), np.empty_like(on_data.q), on_data.sigSA, on_data.SA, on_data.Nj)
+                        on_data.alg_scale(reference)
 
                         off_data = parse.parse(off_string)
-                        off_data.alg_scale(reference, overwrite=True)
+                        off_data = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.sigSA, off_data.SA, off_data.Nj)
+                        off_data.alg_scale(reference)
                         # off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
                         # off_vectors.append(off_scaled)
                         if on_data:
@@ -519,7 +543,7 @@ def all_vectors(parent, samp, reps, on_off_map, option=None, multitemp=None, ite
                                 all_vectors.append(on_data.SA[reference.q>0.03])
                                 all_labels.append(on)
                                 sub_scaled = subtract_scaled_traces(on_data,off_data)
-                                tr_vectors_labels.append((sub_scaled, on))
+                                tr_vectors_labels.append((sub_scaled.SA[reference.q>0.03], on))
 
 
                     except:
@@ -615,170 +639,201 @@ def unpack(packed_trace):
 
 ################################################################################
 
+# if args.sample_directory:
+#     data_dir = args.sample_directory
+# elif args.buffer_directory:
+#     data_dir = args.buffer_directory
+# else:
+#     print("\nException: No data provided")
+#     sys.exit(1)
 
 ################################################################################
-###working version of multitemp march 10th, 2018###
-# t0 = clock()
-
-# script,data_dir,buffer_dir= sys.argv
-
-# parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(data_dir, multitemp=True)
-# filtered_off_vectors = {}
-# filtered_vectors = {}
-# for temp in temps:
-#     subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map, multitemp=True, iterations=iterations, temp=temp)
-#     filtered_vectors[temp] = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
-#     all_off_vectors = all_off_traces(parent, samp, reps, on_off_map, multitemp=True, iterations=iterations, temp=temp)
-#     filtered_off_vectors[temp] = iterative_chi_filter(all_off_vectors)
-
-# with open("filtered_off_vectors_dict.pkl", "wb") as pkl:
-#     pickle.dump(filtered_off_vectors, pkl)
-# with open("filtered_vectors_dict.pkl", "wb") as pkl:
-#     pickle.dump(filtered_vectors, pkl)
-
-# parent2, samp2, iterations2, temps2, reps2, on_off_map2 = sample_map_multitemp(buffer_dir, multitemp=True)
-# buffer_filtered_off_vectors = {}
-# buffer_filtered_vectors = {}
-# for temp2 in temps2:
-#     buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2, multitemp=True, iterations=iterations2, temp=temp2)
-#     buffer_filtered_vectors[temp2] = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
-#     buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2, multitemp=True, iterations=iterations2, temp=temp2)
-#     buffer_filtered_off_vectors[temp2] = iterative_chi_filter(buffer_all_off_vectors)
-
-# with open("buffer_filtered_off_vectors_dict.pkl", "wb") as pkl:
-#     pickle.dump(buffer_filtered_off_vectors, pkl)
-# with open("buffer_filtered_vectors_dict.pkl", "wb") as pkl:
-#     pickle.dump(buffer_filtered_vectors, pkl)
+###Begin time-resolved differences on scaled frames###
 
 
-# avg_filt_off = {temp:average_traces(filtered_off_vectors[temp]) for temp in filtered_off_vectors.keys()}
-# for key in avg_filt_off.keys():
-#     avg_filt_off[key].buffer_scale(avg_filt_off[key])
-# with open("avg_filt_off_dict.pkl", "wb") as pkl:
-#     pickle.dump(avg_filt_off, pkl)
+if args.time_resolved_differences:
 
-# buff_avg_filt_off = {temp:average_traces(buffer_filtered_off_vectors[temp]) for temp in buffer_filtered_off_vectors.keys()}
-# for key in buff_avg_filt_off.keys():
-#     buff_avg_filt_off[key].buffer_scale(avg_filt_off[key])
-# with open("buff_avg_filt_off_dict.pkl", "wb") as pkl:
-#     pickle.dump(buff_avg_filt_off, pkl)
+    parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(args.sample_directory, multitemp=args.multitemp)
+    filtered_off_vectors = {}
+    filtered_vectors = {}
+    for temp in temps:
+        subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
+        filtered_vectors[temp] = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
+        all_off_vectors = all_off_traces(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
+        filtered_off_vectors[temp] = iterative_chi_filter(all_off_vectors)
+
+    with open("filtered_off_vectors_dict.pkl", "wb") as pkl:
+        pickle.dump(filtered_off_vectors, pkl)
+    with open("filtered_vectors_dict.pkl", "wb") as pkl:
+        pickle.dump(filtered_vectors, pkl)
+
+    parent2, samp2, iterations2, temps2, reps2, on_off_map2 = sample_map_multitemp(args.buffer_directory, multitemp=args.multitemp)
+    buffer_filtered_off_vectors = {}
+    buffer_filtered_vectors = {}
+    for temp2 in temps2:
+        buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2, multitemp=args.multitemp, iterations=iterations2, temp=temp2)
+        buffer_filtered_vectors[temp2] = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
+        buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2, multitemp=args.multitemp, iterations=iterations2, temp=temp2)
+        buffer_filtered_off_vectors[temp2] = iterative_chi_filter(buffer_all_off_vectors)
+
+    with open("buffer_filtered_off_vectors_dict.pkl", "wb") as pkl:
+        pickle.dump(buffer_filtered_off_vectors, pkl)
+    with open("buffer_filtered_vectors_dict.pkl", "wb") as pkl:
+        pickle.dump(buffer_filtered_vectors, pkl)
 
 
-# protein_only_avg_filt_off = {temp:buffer_subtract_scaled_traces(avg_filt_off[temp],buff_avg_filt_off[temp]) for temp in filtered_off_vectors.keys()}
+    avg_filt_off = {temp:average_traces(filtered_off_vectors[temp]) for temp in filtered_off_vectors.keys()}
+    for key in avg_filt_off.keys():
+        avg_filt_off[key].buffer_scale(avg_filt_off[key])
+    with open("avg_filt_off_dict.pkl", "wb") as pkl:
+        pickle.dump(avg_filt_off, pkl)
 
-# with open("protein_only_avg_filt_off_dict.pkl", "wb") as pkl:
-#     pickle.dump(protein_only_avg_filt_off, pkl)
+    buff_avg_filt_off = {temp:average_traces(buffer_filtered_off_vectors[temp]) for temp in buffer_filtered_off_vectors.keys()}
+    for key in buff_avg_filt_off.keys():
+        buff_avg_filt_off[key].buffer_scale(avg_filt_off[key])
+    with open("buff_avg_filt_off_dict.pkl", "wb") as pkl:
+        pickle.dump(buff_avg_filt_off, pkl)
 
 
-# mean_TR = {temp:{key: subtract_unscaled_traces(average_traces(filtered_vectors[temp][key]),average_traces(buffer_filtered_vectors[temp][key])) for key in filtered_vectors[temp].keys()} for temp in filtered_off_vectors.keys()}
-# for temp in mean_TR.keys():
-#     for  diff in mean_TR[temp].keys():
-#         mean_TR[temp][diff].write_dat(samp+"_"+temp+"_diff_"+diff+".dat")
+    protein_only_avg_filt_off = {temp:buffer_subtract_scaled_traces(avg_filt_off[temp],buff_avg_filt_off[temp]) for temp in filtered_off_vectors.keys()}
 
-# with open("mean_TR_dict.pkl", "wb") as pkl:
-#     pickle.dump(mean_TR, pkl)
+    with open("protein_only_avg_filt_off_dict.pkl", "wb") as pkl:
+        pickle.dump(protein_only_avg_filt_off, pkl)
 
-# showme = {temp:{key: add_unscaled_traces(protein_only_avg_filt_off[temp],mean_TR[temp][key]) for key in mean_TR[temp].keys()} for temp in filtered_off_vectors.keys()}
 
-# for temp in showme.keys():
-#     for itm in showme[temp].keys():
-#         showme[temp][itm].write_dat(samp+"_"+temp+"_"+itm+".dat")
+    mean_TR = {temp:{key: subtract_unscaled_traces(average_traces(filtered_vectors[temp][key]),average_traces(buffer_filtered_vectors[temp][key])) for key in filtered_vectors[temp].keys()} for temp in filtered_off_vectors.keys()}
+    for temp in mean_TR.keys():
+        for  diff in mean_TR[temp].keys():
+            mean_TR[temp][diff].write_dat(samp+"_"+temp+"_diff_"+diff+".dat")
 
-# with open("TR-plus-avg_dict.pkl", "wb") as pkl:
-#     pickle.dump(showme, pkl)
+    with open("mean_TR_dict.pkl", "wb") as pkl:
+        pickle.dump(mean_TR, pkl)
 
-# for temp in showme.keys():
-#     real_space_plotter(showme[temp],temp)
+    showme = {temp:{key: add_unscaled_traces(protein_only_avg_filt_off[temp],mean_TR[temp][key]) for key in mean_TR[temp].keys()} for temp in filtered_off_vectors.keys()}
 
+    for temp in showme.keys():
+        for itm in showme[temp].keys():
+            showme[temp][itm].write_dat(samp+"_"+temp+"_"+itm+".dat")
+
+    with open("TR-plus-avg_dict.pkl", "wb") as pkl:
+        pickle.dump(showme, pkl)
+
+    for temp in showme.keys():
+        real_space_plotter(showme[temp],temp)
+
+else:
+    pass
+
+###End time-resolved differences on scaled frames###
+################################################################################
+###Begin SVD on scaled frames###
+
+if args.svd:
+
+    parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(args.sample_directory, multitemp=args.multitemp)
+    multi_all_vectors = {}
+    multi_all_labels = {}
+    tr_vectors_labels = {}
+    # filtered_vectors = {}
+    for temp in temps:
+        multi_all_vectors[temp], multi_all_labels[temp], tr_vectors_labels[temp] = all_vectors(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
+
+    # full_list = multi_all_vectors['19C']
+    # full_labels = multi_all_labels['19C']
+    full_list = [item[0] for item in tr_vectors_labels['3C']]
+    full_labels = [item[1] for item in tr_vectors_labels['3C']]
+
+    # print(full_list)
+    fig0, ax0 = plt.subplots()
+    all_curves = [list(zip(reference.q[reference.q>0.03],item)) for item in full_list]
+    # print(all_curves[0])
+    line_segments = LineCollection(all_curves,color="green",lw=0.5)
+    ax0.add_collection(line_segments)
+    ax0.plot()
+    # ax0.scatter(reference.q,full_list)
+    fig0.savefig("scaled_radavgs.png", dpi=300)
+    plt.show(block=False)
+
+
+    u,s,v = svd(full_list, full_matrices=False)
+    with open("svd_u.pkl", "wb") as pkl:
+        pickle.dump(u, pkl)
+    with open("svd_s.pkl", "wb") as pkl:
+        pickle.dump(s, pkl)
+    with open("svd_v.pkl", "wb") as pkl:
+        pickle.dump(v, pkl)
+
+    fig, ax = plt.subplots()
+    i = 0
+    #print("xx shape = {}".format(xx.shape))
+    for vector in v[0:8]:
+        # print vector
+        #print("vector shape = {}".format(vector.shape))
+        # ax.plot(range(len(vectors)), [value+i for value in vector], "-")
+        ax.plot(reference.q[reference.q>0.03], vector+i*0.1, "-", label = "v{}".format(i), lw=0.7)
+        i+=1
+    plt.legend()
+    ax.set_xscale('log')
+    #fig.savefig("{}_svd.png".format(run_numb))
+    fig.savefig("singular_vectors.png", dpi=300)
+    plt.show(block=False)
+
+    #np.save("time_dep_vector", v[2])
+
+    fig2, ax2 = plt.subplots()
+    i = 0
+    for vector in u.T[0:4]:
+        # print vector
+        # ax.plot(range(len(vectors)), [value+i for value in vector], "-")
+        # x = [i*0.025 for i in range(len(vector))] 
+        ax2.plot(vector, label = "v{}".format(i), lw=0.5)
+        # ax2.scatter(light, vector[light]+i*.3, marker='+', color='red', edgecolors="none", s=2, label = "v{} light".format(i))
+        i+=1
+    #plt.legend()
+        
+    #fig2.savefig("{}_result.png".format(run_numb))
+    fig2.savefig("vector_per_image.png", dpi=300)
+    fig2.set_figwidth(15)
+    fig3, ax3= plt.subplots()
+    ax3.plot([np.log(i) for i in s][0:8], "-")
+    #fig3.savefig("{}_singular_values.png".format(run_numb))
+    fig3.savefig("singular_values.png")
+    plt.show(block=False)
+    #plt.show(figsize(10,10),dpi=300)
+        # print i
+        # print ordered_keylist
+    #fig2.show()
+    fig4, ax4 = plt.subplots()
+    i = 0
+
+    time_resolved_vectors = {}
+    for vector in u.T[0:8]:
+        for time in TIMES:
+            time_resolved_vectors[time] = np.mean(np.array(vector[full_labels.index(time)]))
+            # ax4.scatter(parse.times_numeric(time),np.mean(np.subtract(np.array(vector[full_labels.index(time)]), np.array(vector[full_labels.index(time)-1]))), color="black", label=time)
+
+            ax4.scatter(parse.times_numeric(time),np.mean(np.array(vector[full_labels.index(time)])), color="black", label=time)
+
+        # print vector
+        # ax.plot(range(len(vectors)), [value+i for value in vector], "-")
+        # x = [i*0.025 for i in range(len(vector))] 
+            # ax4.hist(vector[full_labels.index(time)], 100, color='blue', alpha=0.5, label = "v{}".format(str(i)+'_'+str(time)))
+        # ax4.hist(vector[light], 500, color='red', alpha=0.5, label = "v{} light".format(i))
+        ax4.set_xscale('log')
+        ax4.set_xlabel('Time (ns)')
+        # plt.legend()
+        fig4.savefig("v{}_time_dependence.png".format(i), dpi=300)
+        # plt.show()
+        
+        i+=1
+        ax4.cla()
+    plt.show()
+else:
+    pass
 
 ################################################################################
-###SVD analysis###
-script,data_dir= sys.argv
-
-parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(data_dir, multitemp=True)
-multi_all_vectors = {}
-multi_all_labels = {}
-tr_vectors_labels = {}
-# filtered_vectors = {}
-for temp in temps:
-    multi_all_vectors[temp], multi_all_labels[temp], tr_vectors_labels[temp] = all_vectors(parent, samp, reps, on_off_map, multitemp=True, iterations=iterations, temp=temp)
-
-full_list = multi_all_vectors['19C']
-full_labels = multi_all_labels['19C']
-# print(full_labels)
+###End SVD on scaled frames###
 
 
-fig0, ax0 = plt.subplots()
-all_curves = [list(zip(reference.q[reference.q>0.03],item)) for item in full_list]
-# print(all_curves[0])
-line_segments = LineCollection(all_curves,color="green",lw=0.5)
-ax0.add_collection(line_segments)
-ax0.plot()
-# ax0.scatter(reference.q,full_list)
-fig0.savefig("scaled_radavgs.png", dpi=300)
-plt.show(block=False)
 
 
-u,s,v = svd(full_list, full_matrices=False)
-fig, ax = plt.subplots()
-i = 0
-#print("xx shape = {}".format(xx.shape))
-for vector in v[0:8]:
-    # print vector
-    #print("vector shape = {}".format(vector.shape))
-    # ax.plot(range(len(vectors)), [value+i for value in vector], "-")
-    ax.plot(reference.q[reference.q>0.03], vector+i*0.1, "-", label = "v{}".format(i), lw=0.7)
-    i+=1
-plt.legend()
-ax.set_xscale('log')
-#fig.savefig("{}_svd.png".format(run_numb))
-fig.savefig("singular_vectors.png", dpi=300)
-plt.show(block=False)
-
-#np.save("time_dep_vector", v[2])
-
-fig2, ax2 = plt.subplots()
-i = 0
-for vector in u.T[0:4]:
-    # print vector
-    # ax.plot(range(len(vectors)), [value+i for value in vector], "-")
-    # x = [i*0.025 for i in range(len(vector))] 
-    ax2.plot(vector, label = "v{}".format(i), lw=0.5)
-    # ax2.scatter(light, vector[light]+i*.3, marker='+', color='red', edgecolors="none", s=2, label = "v{} light".format(i))
-    i+=1
-#plt.legend()
-    
-#fig2.savefig("{}_result.png".format(run_numb))
-fig2.savefig("vector_per_image.png", dpi=300)
-fig2.set_figwidth(15)
-fig3, ax3= plt.subplots()
-ax3.plot([np.log(i) for i in s][0:8], "-")
-#fig3.savefig("{}_singular_values.png".format(run_numb))
-fig3.savefig("singular_values.png")
-plt.show(block=False)
-#plt.show(figsize(10,10),dpi=300)
-    # print i
-    # print ordered_keylist
-#fig2.show()
-fig4, ax4 = plt.subplots()
-i = 0
-
-time_resolved_vectors = {}
-for vector in u.T[0:8]:
-    for time in TIMES:
-        time_resolved_vectors[time] = np.mean(np.array(vector[full_labels.index(time)]))
-        ax4.scatter(parse.times_numeric(time),np.mean(np.subtract(np.array(vector[full_labels.index(time)]), np.array(vector[full_labels.index(time)-1]))), color="black", label=time)
-    # print vector
-    # ax.plot(range(len(vectors)), [value+i for value in vector], "-")
-    # x = [i*0.025 for i in range(len(vector))] 
-        # ax4.hist(vector[full_labels.index(time)], 100, color='blue', alpha=0.5, label = "v{}".format(str(i)+'_'+str(time)))
-    # ax4.hist(vector[light], 500, color='red', alpha=0.5, label = "v{} light".format(i))
-    ax4.set_xscale('log')
-    ax4.set_xlabel('Time (ns)')
-    # plt.legend()
-    fig4.savefig("v{}_time_dependence.png".format(i), dpi=300)
-    # plt.show()
-    
-    i+=1
-    ax4.cla()
-plt.show()

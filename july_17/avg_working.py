@@ -485,8 +485,8 @@ def unpack(packed_trace):
 t0 = clock()
 # parent, samp, reps, on_off_map = sample_map("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/")
 # parent, samp, reps, on_off_map = sample_map(directory)
-data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/"
-# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-2/xray_images/"
+# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/"
+data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-2/xray_images/"
 
 parent, samp, reps, on_off_map = sample_map(data_dir)
 subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map)
@@ -495,8 +495,8 @@ filtered_vectors = {key:iterative_chi_filter(subtracted_vectors[key]) for key in
 all_off_vectors = all_off_traces(parent, samp, reps, on_off_map)
 filtered_off_vectors = iterative_chi_filter(all_off_vectors)
 
-buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-1/xray_images/"
-# buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-Buffer-2/xray_images/"
+# buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-1/xray_images/"
+buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-Buffer-2/xray_images/"
 parent2, samp2, reps2, on_off_map2 = sample_map(buffer_dir)
 buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2)
 buffer_filtered_vectors = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}

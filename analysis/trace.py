@@ -79,6 +79,24 @@ class Trace(object):
 		self.scaled_sigSA = self.sigSA * scalar
 		return
 
+	def subtract(self, trace_two):
+	    err_one = self.sigSA**2
+	    err_two = trace_two.sigSA**2
+	    err_cov = (2*np.cov(self.sigSA,trace_two.sigSA)[0][1])
+	    total_err = np.sqrt(np.abs(err_one+err_two-err_cov))
+	    output_SA = (self.SA - trace_two.SA)
+	    output = Trace(self.q, np.empty_like(self.q), np.empty_like(self.q), total_err, output_SA, np.empty_like(self.q))
+
+	    err_one = (trace_one.scale_factor*trace_one.sigSA)**2
+	    err_two = (trace_two.scale_factor*trace_two.sigSA)**2
+	    err_cov = (2*trace_one.scale_factor*trace_two.scale_factor*np.cov(trace_one.sigSA,trace_two.sigSA)[0][1])
+	    total_err = np.sqrt(np.abs(err_one+err_two-err_cov))
+	    output_SA = (trace_one.scaled_SA - trace_two.scaled_SA)
+	    output = Trace(trace_one.q, np.empty_like(trace_one.q), np.empty_like(trace_one.q), total_err, output_SA, np.empty_like(trace_one.q))
+	    return output
+
+	    return output
+
 	def as_vector(self):
 		""" The SA column is the air-scattering adjusted integrated intensity"""
 		return self.SA
@@ -102,4 +120,13 @@ class Trace(object):
 			final += ("{0}\t{1}\t{2}\t{3}\n".format(self.q[index], self.SA[index],
 						  self.sigSA[index],self.Nj[index]))
 		return final
-			
+
+class TraceMethods(Trace):
+	def __init__(self, q=None, sigS=None, S=None, sigSA=None, SA=None, Nj=None):
+		super().__init__(q, sigS, S, sigSA, SA, Nj)
+		self.q = q
+		self.sigS = sigS
+		self.S = S
+		self.sigSA = sigSA
+		self. SA = SA
+		self.Nj = Nj
