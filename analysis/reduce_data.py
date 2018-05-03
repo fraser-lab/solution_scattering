@@ -27,14 +27,14 @@ from collections import OrderedDict
 import numpy as np
 from numpy.linalg import svd
 from trace import Trace
-from new_analysis import real_space_plotter
+from real_space import real_space_plotter
 import pickle
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 
 ### Setup command-line input flags and help messages
 
-parser = ArgumentParser(usage='python3 avg_working.py [options]', description='Analyze time-resolved solution scattering data.', formatter_class=RawDescriptionHelpFormatter)
+parser = ArgumentParser(usage='python3 reduce_data.py [options]', description='Analyze time-resolved solution scattering data.', formatter_class=RawDescriptionHelpFormatter)
 parser.add_argument('-tr', '--time_resolved_differences', help='create average traces for each time point, with matching buffer subtraction', action='store_true')
 parser.add_argument('-svd', help='singular value decomposition of a series of traces', action='store_true')
 parser.add_argument('-mt', '--multitemp', help='Multiple temperatures within each sample directory', action='store_true')
@@ -48,10 +48,11 @@ args = parser.parse_args()
 
 # script, directory = sys.argv
 # reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
-# reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
+# reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20161110/CypA-3/xray_images/CypA-3_9_178ns.tpkl")
+reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
 # reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-1/xray_images/CypA-S99T-1_9_75ns_off.tpkl")
 # reference = parse.parse("/Volumes/beryllium/aps_march2018/Lysozyme/Lysozyme-apo/Lysozyme-apo-Buffer-1/xray_images/Lysozyme-apo-Buffer-1_2_3C_1_23.7us.tpkl")
-reference = parse.parse("/Volumes/beryllium/aps_march2018/Lysozyme_reintegrated/Lysozyme-apo-Buffer-1/xray_images/Lysozyme-apo-Buffer-1_5_3C_5_237us.tpkl")
+# reference = parse.parse("/Volumes/beryllium/aps_march2018/Lysozyme_old/Lysozyme-apo/Lysozyme-apo-Buffer-1/xray_images/Lysozyme-apo-Buffer-1_5_3C_5_237us.tpkl")
 
 if args.reference:
     reference = parse.parse(args.reference)
@@ -64,7 +65,7 @@ t_shortlist = ["-10.1us", "1us", "10us", "100us", "1ms"]
 # t_shortlist = ["562ns"]
 # t_shortlist = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us"]
 TIMES = [ "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us", "316us", "422us", "562us"]
-
+temp='3C'
 
 
 def sample_map_multitemp(samp_dir, multitemp=None):
@@ -82,18 +83,24 @@ def sample_map_multitemp(samp_dir, multitemp=None):
         if multitemp:
             samp, iteration, temp, rep, time = name.split('_')
             time = time.replace('.tpkl','')
+            ITERATIONS.append(iteration)
+            TEMPS.append(temp)
         else:
-            samp, rep, time, onoff = name.split('_')
-        # time = time.replace('.tpkl','')
+            try:
+                samp, rep, time, onoff = name.split('_')
+            except:
+                samp, rep, time = name.split('_')
+                time = time.replace('.tpkl','')
         REPS.append(rep)
         TIMES.append(time)
-        ITERATIONS.append(iteration)
-        TEMPS.append(temp)
-
+        
+    if multitemp:
+        ITERATIONS = sorted(list(set(ITERATIONS)), key=float)
+        TEMPS = list(set(TEMPS))
+    else:
+        pass
     REPS = sorted(list(set(REPS)), key=float)
     TIMES = list(set(TIMES))
-    ITERATIONS = sorted(list(set(ITERATIONS)), key=float)
-    TEMPS = list(set(TEMPS))
     OFFS = [item for item in TIMES if "-10us" in item]
     ONS = [item for item in TIMES if "-10us" not in item]
     # OFFS = [item for item in TIMES if "off" in item]
@@ -106,14 +113,14 @@ def sample_map_multitemp(samp_dir, multitemp=None):
     # on_off_map = {k:v for k,v in (zip(clean_ons,sorted(OFFS, key=parse.alphanum_key)))}
     return parent, samp, ITERATIONS, TEMPS, REPS, on_off_map
 
-def sample_map(samp_dir):
-    samp_dir = pathlib.Path(samp_dir)
-    samp_files = list(samp_dir.glob(pattern='*.tpkl'))
+def sample_map(file_dir):
+    file_dir = pathlib.Path(file_dir)
+    files = list(file_dir.glob(pattern='**/*.tpkl'))
     # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
     t0 = clock()
     REPS = []
     TIMES = []
-    for file in samp_files:
+    for file in files:
         name = file.name
         parent = file.parent
         samp, rep, time = name.split('_')
@@ -653,73 +660,128 @@ def unpack(packed_trace):
 
 if args.time_resolved_differences:
 
-    parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(args.sample_directory, multitemp=args.multitemp)
-    filtered_off_vectors = {}
-    filtered_vectors = {}
-    for temp in temps:
-        subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
-        filtered_vectors[temp] = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
-        all_off_vectors = all_off_traces(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
-        filtered_off_vectors[temp] = iterative_chi_filter(all_off_vectors)
-
-    with open("filtered_off_vectors_dict.pkl", "wb") as pkl:
-        pickle.dump(filtered_off_vectors, pkl)
-    with open("filtered_vectors_dict.pkl", "wb") as pkl:
-        pickle.dump(filtered_vectors, pkl)
-
-    parent2, samp2, iterations2, temps2, reps2, on_off_map2 = sample_map_multitemp(args.buffer_directory, multitemp=args.multitemp)
-    buffer_filtered_off_vectors = {}
-    buffer_filtered_vectors = {}
-    for temp2 in temps2:
-        buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2, multitemp=args.multitemp, iterations=iterations2, temp=temp2)
-        buffer_filtered_vectors[temp2] = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
-        buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2, multitemp=args.multitemp, iterations=iterations2, temp=temp2)
-        buffer_filtered_off_vectors[temp2] = iterative_chi_filter(buffer_all_off_vectors)
-
-    with open("buffer_filtered_off_vectors_dict.pkl", "wb") as pkl:
-        pickle.dump(buffer_filtered_off_vectors, pkl)
-    with open("buffer_filtered_vectors_dict.pkl", "wb") as pkl:
-        pickle.dump(buffer_filtered_vectors, pkl)
 
 
-    avg_filt_off = {temp:average_traces(filtered_off_vectors[temp]) for temp in filtered_off_vectors.keys()}
-    for key in avg_filt_off.keys():
-        avg_filt_off[key].buffer_scale(avg_filt_off[key])
-    with open("avg_filt_off_dict.pkl", "wb") as pkl:
-        pickle.dump(avg_filt_off, pkl)
+    if args.multitemp:
+        parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(args.sample_directory, multitemp=args.multitemp)
+        filtered_off_vectors = {}
+        filtered_vectors = {}
+        for temp in temps:
+            subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
+            filtered_vectors[temp] = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
+            all_off_vectors = all_off_traces(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
+            filtered_off_vectors[temp] = iterative_chi_filter(all_off_vectors)
+        # else:
+        #     # subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
+        #     # filtered_vectors = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
+        #     # all_off_vectors = all_off_traces(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
+        #     # filtered_off_vectors = iterative_chi_filter(all_off_vectors)
+        #     pass
 
-    buff_avg_filt_off = {temp:average_traces(buffer_filtered_off_vectors[temp]) for temp in buffer_filtered_off_vectors.keys()}
-    for key in buff_avg_filt_off.keys():
-        buff_avg_filt_off[key].buffer_scale(avg_filt_off[key])
-    with open("buff_avg_filt_off_dict.pkl", "wb") as pkl:
-        pickle.dump(buff_avg_filt_off, pkl)
+        with open("filtered_off_vectors_dict.pkl", "wb") as pkl:
+            pickle.dump(filtered_off_vectors, pkl)
+        with open("filtered_vectors_dict.pkl", "wb") as pkl:
+            pickle.dump(filtered_vectors, pkl)
+
+        parent2, samp2, iterations2, temps2, reps2, on_off_map2 = sample_map_multitemp(args.buffer_directory, multitemp=args.multitemp)
+        buffer_filtered_off_vectors = {}
+        buffer_filtered_vectors = {}
 
 
-    protein_only_avg_filt_off = {temp:buffer_subtract_scaled_traces(avg_filt_off[temp],buff_avg_filt_off[temp]) for temp in filtered_off_vectors.keys()}
+        # if args.multitemp:
+        for temp2 in temps2:
+            buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2, multitemp=args.multitemp, iterations=iterations2, temp=temp2)
+            buffer_filtered_vectors[temp2] = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
+            buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2, multitemp=args.multitemp, iterations=iterations2, temp=temp2)
+        #         buffer_filtered_off_vectors[temp2] = iterative_chi_filter(buffer_all_off_vectors)
+        # else:
+        #     # buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2, multitemp=args.multitemp, iterations=iterations2, temp=temp2)
+        #     # buffer_filtered_vectors = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
+        #     # buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2, multitemp=args.multitemp, iterations=iterations2, temp=temp2)
+        #     # buffer_filtered_off_vectors = iterative_chi_filter(buffer_all_off_vectors)
+        #     pass
 
-    with open("protein_only_avg_filt_off_dict.pkl", "wb") as pkl:
-        pickle.dump(protein_only_avg_filt_off, pkl)
+        with open("buffer_filtered_off_vectors_dict.pkl", "wb") as pkl:
+            pickle.dump(buffer_filtered_off_vectors, pkl)
+        with open("buffer_filtered_vectors_dict.pkl", "wb") as pkl:
+            pickle.dump(buffer_filtered_vectors, pkl)
 
 
-    mean_TR = {temp:{key: subtract_unscaled_traces(average_traces(filtered_vectors[temp][key]),average_traces(buffer_filtered_vectors[temp][key])) for key in filtered_vectors[temp].keys()} for temp in filtered_off_vectors.keys()}
-    for temp in mean_TR.keys():
-        for  diff in mean_TR[temp].keys():
-            mean_TR[temp][diff].write_dat(samp+"_"+temp+"_diff_"+diff+".dat")
 
-    with open("mean_TR_dict.pkl", "wb") as pkl:
-        pickle.dump(mean_TR, pkl)
 
-    showme = {temp:{key: add_unscaled_traces(protein_only_avg_filt_off[temp],mean_TR[temp][key]) for key in mean_TR[temp].keys()} for temp in filtered_off_vectors.keys()}
+        avg_filt_off = {temp:average_traces(filtered_off_vectors[temp]) for temp in filtered_off_vectors.keys()}
+        for key in avg_filt_off.keys():
+            avg_filt_off[key].buffer_scale(avg_filt_off[key])
+        with open("avg_filt_off_dict.pkl", "wb") as pkl:
+            pickle.dump(avg_filt_off, pkl)
 
-    for temp in showme.keys():
-        for itm in showme[temp].keys():
-            showme[temp][itm].write_dat(samp+"_"+temp+"_"+itm+".dat")
+        buff_avg_filt_off = {temp:average_traces(buffer_filtered_off_vectors[temp]) for temp in buffer_filtered_off_vectors.keys()}
+        for key in buff_avg_filt_off.keys():
+            buff_avg_filt_off[key].buffer_scale(avg_filt_off[key])
+        with open("buff_avg_filt_off_dict.pkl", "wb") as pkl:
+            pickle.dump(buff_avg_filt_off, pkl)
 
-    with open("TR-plus-avg_dict.pkl", "wb") as pkl:
-        pickle.dump(showme, pkl)
 
-    for temp in showme.keys():
-        real_space_plotter(showme[temp],temp)
+        protein_only_avg_filt_off = {temp:buffer_subtract_scaled_traces(avg_filt_off[temp],buff_avg_filt_off[temp]) for temp in filtered_off_vectors.keys()}
+
+        with open("protein_only_avg_filt_off_dict.pkl", "wb") as pkl:
+            pickle.dump(protein_only_avg_filt_off, pkl)
+
+
+        mean_TR = {temp:{key: subtract_unscaled_traces(average_traces(filtered_vectors[temp][key]),average_traces(buffer_filtered_vectors[temp][key])) for key in filtered_vectors[temp].keys()} for temp in filtered_off_vectors.keys()}
+        for temp in mean_TR.keys():
+            for  diff in mean_TR[temp].keys():
+                mean_TR[temp][diff].write_dat(samp+"_"+temp+"_diff_"+diff+".dat")
+
+        with open("mean_TR_dict.pkl", "wb") as pkl:
+            pickle.dump(mean_TR, pkl)
+
+        showme = {temp:{key: add_unscaled_traces(protein_only_avg_filt_off[temp],mean_TR[temp][key]) for key in mean_TR[temp].keys()} for temp in filtered_off_vectors.keys()}
+
+        for temp in showme.keys():
+            for itm in showme[temp].keys():
+                showme[temp][itm].write_dat(samp+"_"+temp+"_"+itm+".dat")
+
+        with open("TR-plus-avg_dict.pkl", "wb") as pkl:
+            pickle.dump(showme, pkl)
+
+        for temp in showme.keys():
+            real_space_plotter(showme[temp],temp)
+    else:
+
+        parent, samp, reps, on_off_map = sample_map(args.sample_directory)
+        subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map)
+        filtered_vectors = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
+
+        all_off_vectors = all_off_traces(parent, samp, reps, on_off_map)
+        filtered_off_vectors = iterative_chi_filter(all_off_vectors)
+
+        parent2, samp2, reps2, on_off_map2 = sample_map(args.buffer_directory)
+        buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2)
+        buffer_filtered_vectors = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
+        buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2)
+        buffer_filtered_off_vectors = iterative_chi_filter(buffer_all_off_vectors)
+
+
+
+        avg_filt_off = average_traces(filtered_off_vectors)
+        avg_filt_off.buffer_scale(avg_filt_off)
+        buff_avg_filt_off = average_traces(buffer_filtered_off_vectors)
+        buff_avg_filt_off.buffer_scale(avg_filt_off)
+        protein_only_avg_filt_off = buffer_subtract_scaled_traces(avg_filt_off,buff_avg_filt_off)
+        # protein_only_avg_filt_off.buffer_scale(protein_only_avg_filt_off)
+        mean_TR = {key: subtract_unscaled_traces(average_traces(filtered_vectors[key]),average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}
+        for diff in mean_TR.keys():
+            mean_TR[diff].write_dat(samp+"_diff_"+diff+".dat")
+        #     value.buffer_scale(protein_only_avg_filt_off)
+        showme = {key: add_unscaled_traces(protein_only_avg_filt_off,mean_TR[key]) for key in mean_TR.keys()}
+        # showme["750ns"].write_dat("first_output.dat")
+        # print(showme.keys())
+        for itm in showme.keys():
+            showme[itm].write_dat(samp+"_"+itm+".dat")
+
+        real_space_plotter(showme)
+
 
 else:
     pass
@@ -735,13 +797,16 @@ if args.svd:
     multi_all_labels = {}
     tr_vectors_labels = {}
     # filtered_vectors = {}
-    for temp in temps:
-        multi_all_vectors[temp], multi_all_labels[temp], tr_vectors_labels[temp] = all_vectors(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
+    if args.multitemp:
+        for temp in temps:
+            multi_all_vectors[temp], multi_all_labels[temp], tr_vectors_labels[temp] = all_vectors(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
+        full_list = [item[0] for item in tr_vectors_labels['3C']]
+        full_labels = [item[1] for item in tr_vectors_labels['3C']]
+    else:
+        multi_all_vectors, multi_all_labels, tr_vectors_labels = all_vectors(parent, samp, reps, on_off_map, multitemp=args.multitemp)
 
-    # full_list = multi_all_vectors['19C']
-    # full_labels = multi_all_labels['19C']
-    full_list = [item[0] for item in tr_vectors_labels['3C']]
-    full_labels = [item[1] for item in tr_vectors_labels['3C']]
+        full_list = [item[0] for item in tr_vectors_labels]
+        full_labels = [item[1] for item in tr_vectors_labels]
 
     # print(full_list)
     fig0, ax0 = plt.subplots()
@@ -831,6 +896,9 @@ if args.svd:
 else:
     pass
 
+data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-static-1/xray_images/"
+wt_map = static_map(data_dir)
+wt_full = iter_vir(wt_map, 50)
 ################################################################################
 ###End SVD on scaled frames###
 

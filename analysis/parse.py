@@ -47,8 +47,8 @@ dt = np.dtype({'names': ['q','S','sigS','SA','sigSA','Nj'],
 def parse_tpkl_2(filename):
     """Loads tpkl files and generates a corresponding Trace object.
     """
-    # TPKL_HEADER_BYTES = 279 ### this value could vary...original value
-    TPKL_HEADER_BYTES = 290 ### march 2018
+    TPKL_HEADER_BYTES = 279 ### this value could vary...original value
+    # TPKL_HEADER_BYTES = 290 ### march 2018
     with open(filename, "rb") as f:
         f.seek(TPKL_HEADER_BYTES)
         data = np.fromfile(f, dtype=dt)

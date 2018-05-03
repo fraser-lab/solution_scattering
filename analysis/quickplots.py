@@ -2,17 +2,21 @@ import glob
 import matplotlib.pyplot as plt
 import pandas as pd
 
-diffs = glob.glob('./*diff*')
+dats = glob.glob('./*dat')
+diffs = [item for item in dats if "diff" in item]
+avgs = [item for item in dats if "diff" not in item]
+
 
 low = [item for item in diffs if "3C" in item]
 med = [item for item in diffs if "11C" in item]
 high = [item for item in diffs if "19C" in item]
 
+
 subselection = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us"]
 
 
 ii = -1
-for item in low:
+for item in avgs:
     for sub in subselection:
         if sub in item:
             if ii < 0:
