@@ -85,7 +85,7 @@ def real_space_plotter(samples, name=None):
         x1 = x1[mask1]
         y1 = y1[mask1]
         ax1.plot(x1,y1, color=plt.cm.inferno(nii))
-        ax1.set_yscale('log')
+        ax1.set_xscale('log')
         ax1.set_xlabel("$q$")
         ax1.set_ylabel("$\ln(I)$")
         ax1.set_title("Raw Scattering")

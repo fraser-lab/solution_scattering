@@ -100,7 +100,7 @@ def sample_map(samp_dir):
 
 def static_map(samp_dir):
     samp_dir = pathlib.Path(samp_dir)
-    samp_files = list(samp_dir.glob(pattern='**/*.tpkl'))
+    samp_files = list(samp_dir.glob(pattern='*.tpkl'))
     # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
     # t0 = clock()
     # sample_map = []
@@ -151,10 +151,11 @@ def static_map(samp_dir):
 
     # return sample_map
 
-def iter_vir(samples, full_conc):
+def iter_vir(sample_map, full_conc):
     n=0
     
-    temps = set([item[2] for item in samples])
+    # temps = set([item[2] for item in samples])
+    temps = set(sample_map[3])
     temps = sorted(list(temps))
     concs = [full_conc/1, full_conc/3, full_conc/9]
     conc_map = {"PC0":full_conc/1, "PC1":full_conc/3, "PC2":full_conc/9 }
@@ -482,46 +483,46 @@ def unpack(packed_trace):
     return(packed_trace.SA,packed_trace.sigSA)
 
 ########
-t0 = clock()
-# parent, samp, reps, on_off_map = sample_map("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/")
-# parent, samp, reps, on_off_map = sample_map(directory)
-# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/"
-data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-2/xray_images/"
+# t0 = clock()
+# # parent, samp, reps, on_off_map = sample_map("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/")
+# # parent, samp, reps, on_off_map = sample_map(directory)
+# # data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/"
+# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-2/xray_images/"
 
-parent, samp, reps, on_off_map = sample_map(data_dir)
-subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map)
-filtered_vectors = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
+# parent, samp, reps, on_off_map = sample_map(data_dir)
+# subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map)
+# filtered_vectors = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
 
-all_off_vectors = all_off_traces(parent, samp, reps, on_off_map)
-filtered_off_vectors = iterative_chi_filter(all_off_vectors)
+# all_off_vectors = all_off_traces(parent, samp, reps, on_off_map)
+# filtered_off_vectors = iterative_chi_filter(all_off_vectors)
 
-# buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-1/xray_images/"
-buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-Buffer-2/xray_images/"
-parent2, samp2, reps2, on_off_map2 = sample_map(buffer_dir)
-buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2)
-buffer_filtered_vectors = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
-buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2)
-buffer_filtered_off_vectors = iterative_chi_filter(buffer_all_off_vectors)
+# # buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-Buffer-1/xray_images/"
+# buffer_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-Buffer-2/xray_images/"
+# parent2, samp2, reps2, on_off_map2 = sample_map(buffer_dir)
+# buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2)
+# buffer_filtered_vectors = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
+# buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2)
+# buffer_filtered_off_vectors = iterative_chi_filter(buffer_all_off_vectors)
 
 
 
-avg_filt_off = average_traces(filtered_off_vectors)
-avg_filt_off.buffer_scale(avg_filt_off)
-buff_avg_filt_off = average_traces(buffer_filtered_off_vectors)
-buff_avg_filt_off.buffer_scale(avg_filt_off)
-protein_only_avg_filt_off = buffer_subtract_scaled_traces(avg_filt_off,buff_avg_filt_off)
-# protein_only_avg_filt_off.buffer_scale(protein_only_avg_filt_off)
-mean_TR = {key: subtract_unscaled_traces(average_traces(filtered_vectors[key]),average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}
-for diff in mean_TR.keys():
-    mean_TR[diff].write_dat(samp+"_diff_"+diff+".dat")
-#     value.buffer_scale(protein_only_avg_filt_off)
-showme = {key: add_unscaled_traces(protein_only_avg_filt_off,mean_TR[key]) for key in mean_TR.keys()}
-# showme["750ns"].write_dat("first_output.dat")
-# print(showme.keys())
-for itm in showme.keys():
-    showme[itm].write_dat(samp+"_"+itm+".dat")
+# avg_filt_off = average_traces(filtered_off_vectors)
+# avg_filt_off.buffer_scale(avg_filt_off)
+# buff_avg_filt_off = average_traces(buffer_filtered_off_vectors)
+# buff_avg_filt_off.buffer_scale(avg_filt_off)
+# protein_only_avg_filt_off = buffer_subtract_scaled_traces(avg_filt_off,buff_avg_filt_off)
+# # protein_only_avg_filt_off.buffer_scale(protein_only_avg_filt_off)
+# mean_TR = {key: subtract_unscaled_traces(average_traces(filtered_vectors[key]),average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}
+# for diff in mean_TR.keys():
+#     mean_TR[diff].write_dat(samp+"_diff_"+diff+".dat")
+# #     value.buffer_scale(protein_only_avg_filt_off)
+# showme = {key: add_unscaled_traces(protein_only_avg_filt_off,mean_TR[key]) for key in mean_TR.keys()}
+# # showme["750ns"].write_dat("first_output.dat")
+# # print(showme.keys())
+# for itm in showme.keys():
+#     showme[itm].write_dat(samp+"_"+itm+".dat")
 
-real_space_plotter(showme)
+# real_space_plotter(showme)
 
 ############
 
@@ -531,10 +532,11 @@ real_space_plotter(showme)
 
 ###########
 
-# data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-static-1/xray_images/"
-# wt_map = static_map(data_dir)
-# wt_full = iter_vir(wt_map, 50)
+data_dir = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-static-1/xray_images/"
+wt_map = static_map(data_dir)
+wt_full = iter_vir(wt_map, 50)
 
+print(wt_full)
 # data_dir_2 = "/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-static-2/xray_images/"
 # s99_map = static_map(data_dir_2)
 # s99_full = iter_vir(s99_map, 50)

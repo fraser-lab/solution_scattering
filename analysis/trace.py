@@ -28,10 +28,14 @@ class Trace(object):
 		self.scaled_sigSA = self.sigSA/scale
 		return (self.scaled_SA, self.scaled_sigSA)
 
-	def alg_scale(self, ref, overwrite=None):
+	def alg_scale(self, ref):
 		"""Scale by projection of a vector onto a reference vector and determining the magnitude difference."""
 		SA_ref = ref.SA
-		SA_var = self.SA
+		if len(self.q) == len(ref.q):
+			SA_var = self.SA
+		else:
+			SA_var = self.SA[self.q>=0.0025]
+			SA_var = SA_var[self.q<=5.1925]
 		q = ref.q
 		q_SA_ref = SA_ref*q
 		q_SA_var = SA_var*q
@@ -39,12 +43,8 @@ class Trace(object):
 		bottom = np.dot(q_SA_var,q_SA_var)
 		scalar = top/bottom
 		self.scale_factor = scalar
-		if overwrite:
-			self.SA = SA_var * scalar
-			self.sigSA = self.sigSA * scalar
-		else:
-			self.scaled_SA = SA_var * scalar
-			self.scaled_sigSA = self.sigSA * scalar
+		self.scaled_SA = self.SA * scalar
+		self.scaled_sigSA = self.sigSA * scalar
 		return
 
 	def integration_scale(self, ref):
