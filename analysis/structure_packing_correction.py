@@ -22,5 +22,6 @@ for file in tr_sum_files:
 	data = pd.read_table(file,names=["q","SA","sigSA"], delim_whitespace=True, skiprows=1)
 	# data = data[data.q>=0.03]
 	spf_corrected_int = data.SA/spf.SA
-	old_dog_new_tricks = Trace(data.q, np.empty_like(data.q), np.empty_like(data.q), np.empty_like(data.q), spf_corrected_int, np.empty_like(data.q))
+	spf_corrected_error = spf_corrected_int*np.sqrt((data.sigSA/data.SA)**2 + (spf.sigSA/spf.SA)**2) ### https://terpconnect.umd.edu/~toh/models/ErrorPropagation.pdf
+	old_dog_new_tricks = Trace(data.q, np.empty_like(data.q), np.empty_like(data.q), spf_corrected_error, spf_corrected_int, np.empty_like(data.q))
 	old_dog_new_tricks.write_dat(samp+"_"+data_type+"_"+time+"_spf-corrected"+".dat")
