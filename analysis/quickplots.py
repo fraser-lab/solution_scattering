@@ -19,23 +19,25 @@ subselection = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us"
 
 
 DATAA = []
+labels = []
 ii = -1
 for item in spfs:
     # for sub in subselection:
         # if sub in item:
-        if ii < 0:
-            ii=0
-            nii = ii
-        else:
-            N = plt.cm.inferno.N
-            ii += int(N/len(subselection))
-            nii = N-ii    
-        data = pd.read_table(item,skiprows=1,names=['q','SA','sigSA'],delim_whitespace=True,engine='python')
-        DATAA.append(data)
+    samp, temp, dtype = item.split('_')
+    labels.append(temp)
+    if ii < 0:
+        ii=0
+        nii = ii
+    else:
+        N = plt.cm.inferno.N
+        ii += int(N/len(subselection))
+        nii = N-ii    
+    data = pd.read_table(item,skiprows=1,names=['q','SA','sigSA'],delim_whitespace=True,engine='python')
+    DATAA.append(data)
 #             plt.plot(data.q,data.I,label=item.split('_')[-1].replace('.dat',''),color=plt.cm.inferno(nii))
 # plt.legend()
 # plt.xscale('log')
 # plt.show()
 
-
-real_space_plotter(DATAA, name='output')
+real_space_plotter(DATAA, name='output', labels=labels)

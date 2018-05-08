@@ -45,7 +45,7 @@ def guinier_plotter(sample):
     plt.show()
     return
 
-def real_space_plotter(samples, name=None):
+def real_space_plotter(samples, name=None, labels=None):
 
     if isinstance(samples,list):
         pass
@@ -66,6 +66,7 @@ def real_space_plotter(samples, name=None):
     ax4=fig.add_subplot(gs[1,1]) # Second row, second column
 
     ii = -1
+    label_counter = 0
 
     for sample in samples:
 
@@ -84,10 +85,13 @@ def real_space_plotter(samples, name=None):
         mask1[x1<0.03]=False
         x1 = x1[mask1]
         y1 = y1[mask1]
-        ax1.plot(x1,y1, color=plt.cm.inferno(nii))
+        if labels:
+            ax1.plot(x1,y1, color=plt.cm.inferno(nii),label=labels[label_counter])
+        else:
+            ax1.plot(x1,y1, color=plt.cm.inferno(nii))
         ax1.set_xscale('log')
-        ax1.set_xlabel("$q$")
-        ax1.set_ylabel("$\ln(I)$")
+        ax1.set_xlabel("$\ln(q)$")
+        ax1.set_ylabel("$I$")
         ax1.set_title("Raw Scattering")
 
         x2 = sample.q**2
@@ -99,14 +103,21 @@ def real_space_plotter(samples, name=None):
         y2 = y2[mask2]
         fit = np.polyfit(x2,y2,1)
         fit_fxn = np.poly1d(fit)
-        ax2.scatter(x2,y2, color=plt.cm.inferno(nii))
-        ax2.plot(x2,fit_fxn(x2), color=plt.cm.inferno(nii))
+        if labels:
+            ax2.scatter(x2,y2, color=plt.cm.inferno(nii), label=labels[label_counter])
+            ax2.plot(x2,fit_fxn(x2), color=plt.cm.inferno(nii), label=labels[label_counter])
+        else:
+            ax2.scatter(x2,y2, color=plt.cm.inferno(nii))
+            ax2.plot(x2,fit_fxn(x2), color=plt.cm.inferno(nii))
         ax2.set_xlabel("$q^2$")
         ax2.set_ylabel("$\ln(I)$")
         ax2.set_xlim(0.0,0.008)
         ax2.set_title("Guinier Analysis")
 
-        ax4.scatter(x2,y2-fit_fxn(x2), color=plt.cm.inferno(nii))
+        if labels:
+            ax4.scatter(x2,y2-fit_fxn(x2), color=plt.cm.inferno(nii), label=labels[label_counter])
+        else:
+            ax4.scatter(x2,y2-fit_fxn(x2), color=plt.cm.inferno(nii))
         ax4.set_xlabel("$q^2$")
         ax4.set_ylabel("$\ln(I)$")
         ax4.set_xlim(0.0,0.008)
@@ -118,15 +129,23 @@ def real_space_plotter(samples, name=None):
         mask3[x3>0.3]=False
         x3 = x3[mask3]
         y3 = y3[mask3]
-        ax3.plot(x3,y3, color=plt.cm.inferno(nii))
+        if labels:
+            ax3.plot(x3,y3, color=plt.cm.inferno(nii), label=labels[label_counter])
+        else:
+            ax3.plot(x3,y3, color=plt.cm.inferno(nii))
         ax3.set_xlabel("$q$")
         ax3.set_ylabel("$I*q^2$")
         ax3.set_title("Kratky Analysis")
+
+        label_counter += 1
     
     plt.legend()
     plt.tight_layout()
     plt.subplots_adjust(top=0.85)
-    plt.savefig(name+"_real-space-plots.png", dpi=300)
+    if name:
+        plt.savefig(name+"_real-space-plots.png", dpi=300)
+    else:
+        plt.savefig("real-space-plots.png", dpi=300)
     plt.show()
     return
 
