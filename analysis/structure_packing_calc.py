@@ -38,7 +38,8 @@ for temp in TEMPS:
 	for conc in CONCS:
 		little.append(master[temp][conc]['SA'])
 
-	new = pd.concat(little, axis=1, keys=['q','I_pc0', 'I_pc1', 'I_pc2'])
+	little.append(master[temp]['PC0']['sigSA'])
+	new = pd.concat(little, axis=1, keys=['q','I_pc0', 'I_pc1', 'I_pc2', 'sigSA_pc0'])
 	I_0s = []
 	A_s = []
 	I_0s_errors = []
@@ -50,7 +51,7 @@ for temp in TEMPS:
 
 	    I_0 = 1/popt[1]
 	    slope = popt[0]
-	    I_0_error = np.sqrt(pcov[2][2])
+	    I_0_error = np.sqrt(pcov[1][1])
 	    MW = 18500
 	    A = slope*I_0/(2*MW)
 	    I_0s.append(I_0)
@@ -68,9 +69,9 @@ for temp in TEMPS:
 	new["A"] = az
 	new["I_0s_errors"] = ierrorz
 	spf = new.I_pc0/new.I_0
-	spf_error = 
-	old_dog_new_tricks = Trace(new.q, np.empty_like(new.q), np.empty_like(new.q), np.empty_like(new.q), spf, np.empty_like(new.q))
-	old_dog_new_tricks.write_dat(samp+"_"+temp+"_spf_"+".dat")
+	spf_error = spf*np.sqrt((new.sigSA_pc0/new.I_pc0)**2 + (new.I_0s_errors/new.I_0)**2) ### https://terpconnect.umd.edu/~toh/models/ErrorPropagation.pdf
+	old_dog_new_tricks = Trace(new.q, np.empty_like(new.q), np.empty_like(new.q), spf_error, spf, np.empty_like(new.q))
+	old_dog_new_tricks.write_dat(samp+"_"+temp+"_spf"+".dat")
 
 # print(new)
 
