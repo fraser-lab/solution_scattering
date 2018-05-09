@@ -344,7 +344,7 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
                     #     on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, on))
                     try:
                         on_data = parse.parse(on_string)
-                        on_data.alg_scale(reference)
+                        on_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
                     except:
                         print(on_string+"\tfailed")
                         pass
@@ -361,7 +361,7 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
                     
                     try:
                         off_data = parse.parse(off_string)
-                        off_data.alg_scale(reference)
+                        off_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
                     except:
                         print(off_string+"\tfailed")
                         pass
@@ -388,14 +388,14 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
 
                 try:
                     on_data = parse.parse(on_string)
-                    on_data.alg_scale(reference)
+                    on_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
                 except:
                     print(on_string+"\tfailed")
                     pass
                 
                 try:
                     off_data = parse.parse(off_string)
-                    off_data.alg_scale(reference)
+                    off_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
                 except:
                     print(off_string+"\tfailed")
                     pass
@@ -424,7 +424,7 @@ def static_traces(parent, samp, reps, temps, series, option=None):
 
                 try:
                     static_data = parse.parse(static_string)
-                    static_data.alg_scale(reference)
+                    static_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
                     static_scaled = Trace(static_data.q, np.empty_like(static_data.q), np.empty_like(static_data.q), static_data.scaled_sigSA, static_data.scaled_SA, static_data.Nj)
                     static.append(static_scaled)
                 except:
@@ -453,7 +453,7 @@ def all_off_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, 
                     off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, off))
                     try:
                         off_data = parse.parse(off_string)
-                        off_data.alg_scale(reference)
+                        off_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
                         off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
                         off_vectors.append(off_scaled)
                     except:
@@ -470,7 +470,7 @@ def all_off_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, 
                             off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
                         try:
                             off_data = parse.parse(off_string)
-                            off_data.alg_scale(reference)
+                            off_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
                             off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
                             off_vectors.append(off_scaled)
                         except:
@@ -496,11 +496,11 @@ def all_vectors(parent, samp, reps, on_off_map, option=None, multitemp=None, ite
                     try:
                         on_data = parse.parse(on_string)
                         on_data = Trace(on_data.q, np.empty_like(on_data.q), np.empty_like(on_data.q), on_data.sigSA, on_data.SA, on_data.Nj)
-                        on_data.alg_scale(reference)
+                        on_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
 
                         off_data = parse.parse(off_string)
                         off_data = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.sigSA, off_data.SA, off_data.Nj)
-                        off_data.alg_scale(reference)
+                        off_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
                         # off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
                         # off_vectors.append(off_scaled)
                         if on_data:
@@ -646,6 +646,8 @@ else:
     pass
 
 
+QMIN = 0.0025
+QMAX = 5.1925
 CHI_OUTLIER = 1.5
 t_shortlist = ["-10.1us", "1us", "10us", "100us", "1ms"]
 # t_shortlist = ["562ns"]

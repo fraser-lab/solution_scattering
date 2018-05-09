@@ -28,14 +28,14 @@ class Trace(object):
 		self.scaled_sigSA = self.sigSA/scale
 		return (self.scaled_SA, self.scaled_sigSA)
 
-	def alg_scale(self, ref):
+	def alg_scale(self, ref, qmin=None, qmax=None):
 		"""Scale by projection of a vector onto a reference vector and determining the magnitude difference."""
 		SA_ref = ref.SA
 		if len(self.q) == len(ref.q):
 			SA_var = self.SA
 		else:
-			SA_var = self.SA[self.q>=0.0025]
-			SA_var = SA_var[self.q<=5.1925]
+			SA_var = self.SA[self.q>=qmin] ###0.0025 works for full q across all cypa
+			SA_var = SA_var[self.q<=qmax]  ###5.1925 works for full q across all cypa
 		q = ref.q
 		q_SA_ref = SA_ref*q
 		q_SA_var = SA_var*q
