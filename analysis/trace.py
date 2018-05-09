@@ -28,8 +28,15 @@ class Trace(object):
 		self.scaled_sigSA = self.sigSA/scale
 		return (self.scaled_SA, self.scaled_sigSA)
 
-	def alg_scale(self, ref, qmin=None, qmax=None):
-		"""Scale by projection of a vector onto a reference vector and determining the magnitude difference."""
+	def alg_scale(self, ref, qmin=0.0025, qmax=5.1925):
+		"""
+                Scale by projection of a vector onto a reference vector and determining the magnitude difference.
+		
+		:param ref: Reference curve (other Trace object)
+                :param qmin: Minimum q for scaling (default 0.0025) 
+		:param qmax: Maximum q for scaling (default 5.1925)
+                :returns: Scaled SA and sigSA curves (which also get written on the trace as self.scaled_SA, self.scaled_sigSA)
+		"""
 		SA_ref = ref.SA
 		if len(self.q) == len(ref.q):
 			SA_var = self.SA
@@ -45,7 +52,7 @@ class Trace(object):
 		self.scale_factor = scalar
 		self.scaled_SA = self.SA * scalar
 		self.scaled_sigSA = self.sigSA * scalar
-		return
+		return self.scaled_SA, self.scaled_sigSA
 
 	def integration_scale(self, ref):
 		"""Scale by the total number of scattered photons"""
