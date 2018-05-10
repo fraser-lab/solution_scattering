@@ -6,6 +6,7 @@ Benjamin Barad
 """
 
 import numpy as np
+from numpy import linalg as LA
 
 class Trace(object):
 	def __init__(self, q, sigS, S, sigSA, SA, Nj):
@@ -53,6 +54,31 @@ class Trace(object):
 		self.scaled_SA = self.SA * scalar
 		self.scaled_sigSA = self.sigSA * scalar
 		return self.scaled_SA, self.scaled_sigSA
+
+	def projection_scale(self, ref, qmin=0.0025, qmax=5.1925):
+		"""
+                Scale factor is determined by the ratio of - the scalar projection of a vector onto a reference vector - over - the norm of the reference vector
+		
+		:param ref: Reference curve (other Trace object)
+                :param qmin: Minimum q for scaling (default 0.0025) 
+		:param qmax: Maximum q for scaling (default 5.1925)
+                :returns: Scaled SA and sigSA curves (which also get written on the trace as self.scaled_SA, self.scaled_sigSA)
+		"""
+		SA_ref = ref.SA
+		if len(self.q) == len(ref.q):
+			SA_var = self.SA
+		else:
+			SA_var = self.SA[self.q>=qmin] ###0.0025 works for full q across all cypa
+			SA_var = SA_var[self.q<=qmax]  ###5.1925 works for full q across all cypa
+
+		ref_norm = LA.norm(SA_ref)
+		ref_hat = SA_ref / ref_norm
+		scalar_projection = np.dot(SA_var, ref_hat)
+		scalar = scalar_projection / ref_norm
+		self.scale_factor = scalar
+		self.scaled_SA = self.SA * scalar
+		self.scaled_sigSA = self.sigSA * scalar
+		return
 
 	def integration_scale(self, ref):
 		"""Scale by the total number of scattered photons"""
