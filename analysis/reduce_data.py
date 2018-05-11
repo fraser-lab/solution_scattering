@@ -424,7 +424,10 @@ def static_traces(parent, samp, reps, temps, series, option=None):
 
                 try:
                     static_data = parse.parse(static_string)
-                    static_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
+                    # print("test1")
+                    # static_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
+                    static_data.integration_scale(reference, qmin=QMIN, qmax=QMAX)
+                    # print("test2")
                     static_scaled = Trace(static_data.q, np.empty_like(static_data.q), np.empty_like(static_data.q), static_data.scaled_sigSA, static_data.scaled_SA, static_data.Nj)
                     static.append(static_scaled)
                 except:
@@ -647,7 +650,8 @@ else:
 
 
 QMIN = 0.0025
-QMAX = 5.1925
+# QMAX = 5.1925
+QMAX = 4.28
 CHI_OUTLIER = 1.5
 t_shortlist = ["-10.1us", "1us", "10us", "100us", "1ms"]
 # t_shortlist = ["562ns"]

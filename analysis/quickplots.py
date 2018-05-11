@@ -13,6 +13,8 @@ low = [item for item in diffs if "3C" in item]
 med = [item for item in diffs if "11C" in item]
 high = [item for item in diffs if "19C" in item]
 
+pc0s = [item for item in dats if "PC0" in item]
+
 
 subselection = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us"]
 
@@ -21,10 +23,10 @@ subselection = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us"
 DATAA = []
 labels = []
 ii = -1
-for item in spfs:
+for item in pc0s:
     # for sub in subselection:
         # if sub in item:
-    samp, temp, dtype = item.split('_')
+    d1, samp, temp, dtype,d5,d6,d7 = item.split('_')
     labels.append(temp)
     if ii < 0:
         ii=0

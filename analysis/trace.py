@@ -38,13 +38,12 @@ class Trace(object):
 		:param qmax: Maximum q for scaling (default 5.1925)
                 :returns: Scaled SA and sigSA curves (which also get written on the trace as self.scaled_SA, self.scaled_sigSA)
 		"""
-		SA_ref = ref.SA
-		if len(self.q) == len(ref.q):
-			SA_var = self.SA
-		else:
-			SA_var = self.SA[self.q>=qmin] ###0.0025 works for full q across all cypa
-			SA_var = SA_var[self.q<=qmax]  ###5.1925 works for full q across all cypa
-		q = ref.q
+		SA_var = self.SA[self.q>=qmin] ###0.0025 works for full q across all cypa
+		SA_var = SA_var[self.q<=qmax]  ###5.1925 works for full q across all cypa
+		q = ref.q[self.q>=qmin]
+		q = ref.q[self.q<=qmax]
+		SA_ref = ref.SA[self.q>=qmin]
+		SA_ref = ref.SA[self.q<=qmax]
 		q_SA_ref = SA_ref*q
 		q_SA_var = SA_var*q
 		top = np.dot(q_SA_var,q_SA_ref)
@@ -64,12 +63,11 @@ class Trace(object):
 		:param qmax: Maximum q for scaling (default 5.1925)
                 :returns: Scaled SA and sigSA curves (which also get written on the trace as self.scaled_SA, self.scaled_sigSA)
 		"""
-		SA_ref = ref.SA
-		if len(self.q) == len(ref.q):
-			SA_var = self.SA
-		else:
-			SA_var = self.SA[self.q>=qmin] ###0.0025 works for full q across all cypa
-			SA_var = SA_var[self.q<=qmax]  ###5.1925 works for full q across all cypa
+
+		SA_var = self.SA[self.q>=qmin] ###0.0025 works for full q across all cypa
+		SA_var = SA_var[self.q<=qmax]  ###5.1925 works for full q across all cypa
+		SA_ref = ref.SA[self.q>=qmin]
+		SA_ref = ref.SA[self.q<=qmax]
 
 		ref_norm = LA.norm(SA_ref)
 		ref_hat = SA_ref / ref_norm
@@ -80,18 +78,28 @@ class Trace(object):
 		self.scaled_sigSA = self.sigSA * scalar
 		return
 
-	def integration_scale(self, ref):
-		"""Scale by the total number of scattered photons"""
-		SA_ref = ref.SA
-		SA_var = self.SA
-		q = self.q
-		top = np.dot(SA_ref, q)
-		bottom =  np.dot(SA_var, q)
+	def integration_scale(self, ref, qmin=0.0025, qmax=5.1925):
+		"""
+                Scale by the total number of scattered photons
+		
+		:param ref: Reference curve (other Trace object)
+                :param qmin: Minimum q for scaling (default 0.0025) 
+		:param qmax: Maximum q for scaling (default 5.1925)
+                :returns: Scaled SA and sigSA curves (which also get written on the trace as self.scaled_SA, self.scaled_sigSA)
+		"""
+		SA_var = self.SA[self.q>=qmin] ###0.0025 works for full q across all cypa
+		SA_var = SA_var[self.q<=qmax]  ###5.1925 works for full q across all cypa
+		Nj = ref.Nj[self.q>=qmin]
+		Nj = ref.Nj[self.q<=qmax]
+		SA_ref = ref.SA[self.q>=qmin]
+		SA_ref = ref.SA[self.q<=qmax]
+		top = np.dot(SA_var,Nj)
+		bottom = np.dot(SA_ref,Nj)
 		scalar = top/bottom
 		self.scale_factor = scalar
-		self.scaled_SA = SA_var * scalar
+		self.scaled_SA = self.SA * scalar
 		self.scaled_sigSA = self.sigSA * scalar
-		return
+		return self.scaled_SA, self.scaled_sigSA
 
 	def buffer_scale(self, ref):
 		"""Scale by the total number of scattered photons"""
