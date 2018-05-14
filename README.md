@@ -15,25 +15,25 @@ Alex Wolff (LifeHasOrder)
 ### Contents
 
 ```
-parse.py							#library of functions for parsing dat files, tpkl files, etc
-quickplots.py				   		#input parameters for diffuse data processing
+parse.py							#library for reading SAXS data
+quickplots.py						#visual dat files from reduce_data
 saxs_plots.py 						#plotting library for SAXS data
-reduce_data.py					    #reduce replicates, carry out buffer subtraction, and much more
-structure_packing_calc.py			#calculate a SPF vector for each temperature
-structure_packing_correction.py		#divide scattering vector by corresponding SPF vector to correct for packing effects
-trace.py							#trace objects are scattering curves, with internal methods for scaling and arithmetic
+reduce_data.py						#reduce replicates
+structure_packing_calc.py			#calculate a SPF(q)
+structure_packing_correction.py		#divide I(q) by SPF(q)
+trace.py							#object and methods for handling I(q)
 ```
 
 ### Usage
 
 ```
-python3    reduce_data.py    -st directory_with_static_files    -b directory_with_static_buffer_files     #example of how to reduce data
+python3  reduce_data.py  -st dir_static_files  -b dir_static_buffer_files     #example of how to reduce data
 
 
-python3    structure_packing_calc.py    directory_with_static_dat_files		#calculate a structure packing factor and write as a dat file
+python3  structure_packing_calc.py  dir_static_dat_files  #calculate SPF, write as dat
 
 
-python3    structure_packing_correction.py    directory_with_files_to_be_corrected    SPF_dat_file    #divide all dats by SPF
+python3  structure_packing_correction.py  dir_uncorrected  SPF_dat_file  #divide I(q) by SPF(q)
 
 ```
 
