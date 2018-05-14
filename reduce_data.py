@@ -19,7 +19,7 @@ from collections import OrderedDict
 import numpy as np
 from numpy.linalg import svd
 from trace import Trace
-from real_space import real_space_plotter
+from saxs_plots import real_space_plotter
 import pickle
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 

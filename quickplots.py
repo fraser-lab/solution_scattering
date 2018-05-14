@@ -1,7 +1,7 @@
 import glob
 import matplotlib.pyplot as plt
 import pandas as pd
-from real_space import real_space_plotter
+from saxs_plots import real_space_plotter
 
 dats = glob.glob('./*dat')
 diffs = [item for item in dats if "diff" in item]
