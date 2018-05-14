@@ -17,85 +17,45 @@ class Trace(object):
 		self. SA = SA
 		self.Nj = Nj
 
-	def apply_i0_scaling(self, scale_factor):
-		self.scaled_SA = self.SA/scale_factor
-		return self.scaled_SA
-
-	def scale_isosbestic(self):
-		Q = [0.0175 + 0.0025 * i for i in range(2125)]
-		scale = sum([self.SA[i]*Q[i] for i in range(583,603)])
-		print(scale)
-		self.scaled_SA = self.SA/scale
-		self.scaled_sigSA = self.sigSA/scale
-		return (self.scaled_SA, self.scaled_sigSA)
-
-	def alg_scale(self, ref, qmin=0.0025, qmax=5.1925):
-		"""
-                Scale by projection of a vector onto a reference vector and determining the magnitude difference.
-		
-		:param ref: Reference curve (other Trace object)
-                :param qmin: Minimum q for scaling (default 0.0025) 
-		:param qmax: Maximum q for scaling (default 5.1925)
-                :returns: Scaled SA and sigSA curves (which also get written on the trace as self.scaled_SA, self.scaled_sigSA)
-		"""
-		SA_var = self.SA[self.q>=qmin] ###0.0025 works for full q across all cypa
-		SA_var = SA_var[self.q<=qmax]  ###5.1925 works for full q across all cypa
-		q = ref.q[self.q>=qmin]
-		q = ref.q[self.q<=qmax]
-		SA_ref = ref.SA[self.q>=qmin]
-		SA_ref = ref.SA[self.q<=qmax]
-		q_SA_ref = SA_ref*q
-		q_SA_var = SA_var*q
-		top = np.dot(q_SA_var,q_SA_ref)
-		bottom = np.dot(q_SA_var,q_SA_var)
-		scalar = top/bottom
-		self.scale_factor = scalar
-		self.scaled_SA = self.SA * scalar
-		self.scaled_sigSA = self.sigSA * scalar
-		return self.scaled_SA, self.scaled_sigSA
-
-	def projection_scale(self, ref, qmin=0.0025, qmax=5.1925):
-		"""
-                Scale factor is determined by the ratio of - the scalar projection of a vector onto a reference vector - over - the norm of the reference vector
-		
-		:param ref: Reference curve (other Trace object)
-                :param qmin: Minimum q for scaling (default 0.0025) 
-		:param qmax: Maximum q for scaling (default 5.1925)
-                :returns: Scaled SA and sigSA curves (which also get written on the trace as self.scaled_SA, self.scaled_sigSA)
-		"""
-
-		SA_var = self.SA[self.q>=qmin] ###0.0025 works for full q across all cypa
-		SA_var = SA_var[self.q<=qmax]  ###5.1925 works for full q across all cypa
-		SA_ref = ref.SA[self.q>=qmin]
-		SA_ref = ref.SA[self.q<=qmax]
-
-		ref_norm = LA.norm(SA_ref)
-		ref_hat = SA_ref / ref_norm
-		scalar_projection = np.dot(SA_var, ref_hat)
-		scalar = scalar_projection / ref_norm
-		self.scale_factor = scalar
-		self.scaled_SA = self.SA * scalar
-		self.scaled_sigSA = self.sigSA * scalar
-		return
-
-	def integration_scale(self, ref, qmin=0.0025, qmax=5.1925):
+	def scale(self, ref, qmin=0.0025, qmax=5.1925, approach="algebraic"):
 		"""
                 Scale by the total number of scattered photons
 		
 		:param ref: Reference curve (other Trace object)
-                :param qmin: Minimum q for scaling (default 0.0025) 
+        :param qmin: Minimum q for scaling (default 0.0025) 
 		:param qmax: Maximum q for scaling (default 5.1925)
-                :returns: Scaled SA and sigSA curves (which also get written on the trace as self.scaled_SA, self.scaled_sigSA)
+        :returns: Scaled SA and sigSA curves (which also get written on the trace as self.scaled_SA, self.scaled_sigSA)
 		"""
 		SA_var = self.SA[self.q>=qmin] ###0.0025 works for full q across all cypa
 		SA_var = SA_var[self.q<=qmax]  ###5.1925 works for full q across all cypa
-		Nj = ref.Nj[self.q>=qmin]
-		Nj = ref.Nj[self.q<=qmax]
 		SA_ref = ref.SA[self.q>=qmin]
 		SA_ref = ref.SA[self.q<=qmax]
-		top = np.dot(SA_var,Nj)
-		bottom = np.dot(SA_ref,Nj)
-		scalar = top/bottom
+
+		if approach == "algebraic":
+			q = ref.q[self.q>=qmin]
+			q = ref.q[self.q<=qmax]
+			q_SA_ref = SA_ref*q
+			q_SA_var = SA_var*q
+			top = np.dot(q_SA_var,q_SA_ref)
+			bottom = np.dot(q_SA_var,q_SA_var)
+			scalar = top/bottom
+
+		elif approach == "projection":
+			ref_norm = LA.norm(SA_ref)
+			ref_hat = SA_ref / ref_norm
+			scalar_projection = np.dot(SA_var, ref_hat)
+			scalar = scalar_projection / ref_norm
+
+		elif approach == "integration":
+			Nj = ref.Nj[self.q>=qmin]
+			Nj = ref.Nj[self.q<=qmax]
+			top = np.dot(SA_var,Nj)
+			bottom = np.dot(SA_ref,Nj)
+			scalar = top/bottom
+
+		else:
+			raise TypeError('please choose from the following scaling approaches: algebraic, projection, integration')
+
 		self.scale_factor = scalar
 		self.scaled_SA = self.SA * scalar
 		self.scaled_sigSA = self.sigSA * scalar
@@ -120,23 +80,48 @@ class Trace(object):
 		self.scaled_sigSA = self.sigSA * scalar
 		return
 
-	def subtract(self, trace_two):
-	    err_one = self.sigSA**2
-	    err_two = trace_two.sigSA**2
-	    err_cov = (2*np.cov(self.sigSA,trace_two.sigSA)[0][1])
-	    total_err = np.sqrt(np.abs(err_one+err_two-err_cov))
-	    output_SA = (self.SA - trace_two.SA)
-	    output = Trace(self.q, np.empty_like(self.q), np.empty_like(self.q), total_err, output_SA, np.empty_like(self.q))
+	def subtract(self, trace_two, scaled=None, buffer_scaled=None):
+		if scaled:
+			err_one = (self.scale_factor*self.sigSA)**2
+			err_two = (trace_two.scale_factor*trace_two.sigSA)**2
+			err_cov = (2*self.scale_factor*trace_two.scale_factor*np.cov(self.sigSA,trace_two.sigSA)[0][1])
+			output_SA = (self.scaled_SA - trace_two.scaled_SA)
+		elif buffer_scaled:
+			err_one = (self.buffer_scale_factor*self.sigSA)**2
+			err_two = (trace_two.buffer_scale_factor*trace_two.sigSA)**2
+			err_cov = (2*self.buffer_scale_factor*trace_two.buffer_scale_factor*np.cov(self.sigSA,trace_two.sigSA)[0][1])
+			output_SA = (self.scaled_SA - trace_two.scaled_SA)
+		else:
+			err_one = self.sigSA**2
+			err_two = trace_two.sigSA**2
+			err_cov = (2*np.cov(self.sigSA,trace_two.sigSA)[0][1])
+			output_SA = (self.SA - trace_two.SA)
+		total_err = np.sqrt(np.abs(err_one + err_two - err_cov))
+		output = Trace(self.q, np.empty_like(self.q), np.empty_like(self.q), total_err, output_SA, np.empty_like(self.q))
 
-	    err_one = (trace_one.scale_factor*trace_one.sigSA)**2
-	    err_two = (trace_two.scale_factor*trace_two.sigSA)**2
-	    err_cov = (2*trace_one.scale_factor*trace_two.scale_factor*np.cov(trace_one.sigSA,trace_two.sigSA)[0][1])
-	    total_err = np.sqrt(np.abs(err_one+err_two-err_cov))
-	    output_SA = (trace_one.scaled_SA - trace_two.scaled_SA)
-	    output = Trace(trace_one.q, np.empty_like(trace_one.q), np.empty_like(trace_one.q), total_err, output_SA, np.empty_like(trace_one.q))
-	    return output
+		return output
 
-	    return output
+
+	def add(self, trace_two, scaled=None, buffer_scaled=None):
+		if scaled:
+			err_one = (self.scale_factor*self.sigSA)**2
+			err_two = (trace_two.scale_factor*trace_two.sigSA)**2
+			err_cov = (2*self.scale_factor*trace_two.scale_factor*np.cov(self.sigSA,trace_two.sigSA)[0][1])
+			output_SA = (self.scaled_SA + trace_two.scaled_SA)
+		elif buffer_scaled:
+			err_one = (self.buffer_scale_factor*self.sigSA)**2
+			err_two = (trace_two.buffer_scale_factor*trace_two.sigSA)**2
+			err_cov = (2*self.buffer_scale_factor*trace_two.buffer_scale_factor*np.cov(self.sigSA,trace_two.sigSA)[0][1])
+			output_SA = (self.scaled_SA + trace_two.scaled_SA)
+		else:
+			err_one = self.sigSA**2
+			err_two = trace_two.sigSA**2
+			err_cov = (2*np.cov(self.sigSA,trace_two.sigSA)[0][1])
+			output_SA = (self.SA + trace_two.SA)
+		total_err = np.sqrt(np.abs(err_one + err_two + err_cov))
+		output = Trace(self.q, np.empty_like(self.q), np.empty_like(self.q), total_err, output_SA, np.empty_like(self.q))
+
+		return output
 
 	def as_vector(self):
 		""" The SA column is the air-scattering adjusted integrated intensity"""
@@ -162,12 +147,3 @@ class Trace(object):
 						  self.sigSA[index],self.Nj[index]))
 		return final
 
-class TraceMethods(Trace):
-	def __init__(self, q=None, sigS=None, S=None, sigSA=None, SA=None, Nj=None):
-		super().__init__(q, sigS, S, sigSA, SA, Nj)
-		self.q = q
-		self.sigS = sigS
-		self.S = S
-		self.sigSA = sigSA
-		self. SA = SA
-		self.Nj = Nj

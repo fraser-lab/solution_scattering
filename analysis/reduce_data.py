@@ -1,16 +1,8 @@
-### use python 3 error & statement
-import datetime
-import math
-
-now = datetime.datetime.now()
-release = datetime.datetime(2008, 12, 3)
-deltaT = now-release
-years  = math.floor((deltaT.days) / 365)
-days = deltaT.days - years*365
+### use python 3 error
 
 import sys
 if sys.version_info[0] < 3:
-    print("\nException: Please use Python 3, it has been out for {} years {} days, and 2.7 may soon be unsupported (http://www.python3statement.org/)".format(years,days))
+    print("\nException: Please use Python 3")
     sys.exit(1)
 
 ### import needed modules & functions
@@ -142,7 +134,7 @@ def static_map(samp_dir, buffer_d=None):
             print(info+"failed")
         rep = rep.replace(".tpkl","")
         # on_data = parse.parse(str(file))
-        # on_data.alg_scale(reference)
+        # on_data.scale(reference)
         # sample_map.append((samp,dilution,temp,on_data))
 
         # time = time.replace('.tpkl','')
@@ -168,68 +160,6 @@ def static_map(samp_dir, buffer_d=None):
     return parent, samp, REPS, TEMPS, SERIES
 
     # return sample_map
-
-def iter_vir(sample_map, full_conc):
-    n=0
-    
-    # temps = set([item[2] for item in samples])
-    parent, samp, reps, temps, series = sample_map
-    # temps = set(sample_map[3])
-    temps = sorted(list(temps))
-    concs = [full_conc/1, full_conc/3, full_conc/9]
-    conc_map = {"PC0":full_conc/1, "PC1":full_conc/3, "PC2":full_conc/9 }
-    q_output = []
-    a2_output = []
-    spf_output = []
-    for temp in temps:
-        sv_x = []
-        sv_y = []
-        I_0z = []
-        for item in samples:
-            if item[2] == temp:
-                # x = item[3].q
-                y = item[3].SA
-                # data_mask = np.array(x, dtype=bool)
-                # data_mask[x>0.008]=False
-                # x = x[data_mask]
-                # y = y[data_mask]
-                # I_0 = np.exp(linregress(x,y)[1])
-                # I_0z.append(I_0)
-                if item[1] in conc_map.keys():
-                    sv_y.append(1/y)
-                    sv_x.append(conc_map[item[1]])
-                else:
-                    pass
-                n+=1
-            else:
-                pass
-        sv_xp = np.array(sv_x)
-        # print(sv_xp.shape)
-        sv_yp = np.stack(sv_y)
-        # print(sv_yp.shape)
-        m,b = np.polyfit(sv_xp,sv_yp,1)
-        mw = 18500
-        conc = 50
-        # print(fit_I0)
-            # fit_fxnI0 = np.poly1d(fit_I0)
-            # plt.scatter(sv_xp,sv_yp, label=temp)
-            # plt.plot(sv_xp,fit_fxnI0(sv_xp), label=temp+"_fit")
-            # vir_stats = linregress(sv_xp,sv_yp)
-            # I_0_0 = 1/vir_stats[1]
-            # slope = vir_stats[0]
-            # MW = 18500
-            # A = slope*I_0_0/(2*MW)
-            # print("\nStats for virial fit:\n{}\n".format(vir_stats))
-            # print("I(0,0) = {}".format(I_0_0))
-            # print("A = {}".format(A))
-            # print("I(c,0) for pc0 = {}".format(I_0z[0]))
-            # print("I(c,0) for pc1 = {}".format(I_0z[1]))
-            # print("I(c,0) for pc2 = {}".format(I_0z[2]))
-        I0q_output.append((temp,1/b))
-        a2_output.append((temp,m*(1/b)/2*mw))
-        spf_output.append((temp, 1/(1+m/b*conc)))
-
-    return spf_output
 
 
 def chi_stat(var, ref):
@@ -268,62 +198,6 @@ def iterative_chi_filter(vectors):
     return clean_vectors
 
 
-def subtract_scaled_traces(trace_one,trace_two,buffer=None):
-    err_one = (trace_one.scale_factor*trace_one.sigSA)**2
-    err_two = (trace_two.scale_factor*trace_two.sigSA)**2
-    err_cov = (2*trace_one.scale_factor*trace_two.scale_factor*np.cov(trace_one.sigSA,trace_two.sigSA)[0][1])
-    total_err = np.sqrt(np.abs(err_one+err_two-err_cov))
-    output_SA = (trace_one.scaled_SA - trace_two.scaled_SA)
-    output = Trace(trace_one.q, np.empty_like(trace_one.q), np.empty_like(trace_one.q), total_err, output_SA, np.empty_like(trace_one.q))
-    return output
-
-def buffer_subtract_scaled_traces(trace_one,trace_two):
-    err_one = (trace_one.buffer_scale_factor*trace_one.sigSA)**2
-    err_two = (trace_two.buffer_scale_factor*trace_two.sigSA)**2
-    err_cov = (2*trace_one.buffer_scale_factor*trace_two.buffer_scale_factor*np.cov(trace_one.sigSA,trace_two.sigSA)[0][1])
-    total_err = np.sqrt(np.abs(err_one+err_two-err_cov))
-    output_SA = (trace_one.scaled_SA - trace_two.scaled_SA)
-    output = Trace(trace_one.q, np.empty_like(trace_one.q), np.empty_like(trace_one.q), total_err, output_SA, np.empty_like(trace_one.q))
-    return output
-
-def add_scaled_traces(trace_one,trace_two):
-    err_one = (trace_one.scale_factor*trace_one.sigSA)**2
-    err_two = (trace_two.scale_factor*trace_two.sigSA)**2
-    err_cov = (2*trace_one.scale_factor*trace_two.scale_factor*np.cov(trace_one.sigSA,trace_two.sigSA)[0][1])
-    total_err = np.sqrt(np.abs(err_one+err_two+err_cov))
-    output_SA = (trace_one.scaled_SA + trace_two.scaled_SA)
-    output = Trace(trace_one.q, np.empty_like(trace_one.q), np.empty_like(trace_one.q), total_err, output_SA, np.empty_like(trace_one.q))
-    return output
-
-def buffer_add_scaled_traces(trace_one,trace_two):
-    err_one = (trace_one.buffer_scale_factor*trace_one.sigSA)**2
-    err_two = (trace_two.buffer_scale_factor*trace_two.sigSA)**2
-    err_cov = (2*trace_one.buffer_scale_factor*trace_two.buffer_scale_factor*np.cov(trace_one.sigSA,trace_two.sigSA)[0][1])
-    total_err = np.sqrt(np.abs(err_one+err_two+err_cov))
-    output_SA = (trace_one.scaled_SA + trace_two.scaled_SA)
-    output = Trace(trace_one.q, np.empty_like(trace_one.q), np.empty_like(trace_one.q), total_err, output_SA, np.empty_like(trace_one.q))
-    return output
-
-
-def add_unscaled_traces(trace_one,trace_two):
-    err_one = trace_one.sigSA**2
-    err_two = trace_two.sigSA**2
-    err_cov = (2*np.cov(trace_one.sigSA,trace_two.sigSA)[0][1])
-    total_err = np.sqrt(np.abs(err_one+err_two+err_cov))
-    output_SA = (trace_one.SA + trace_two.SA)
-    output = Trace(trace_one.q, np.empty_like(trace_one.q), np.empty_like(trace_one.q), total_err, output_SA, np.empty_like(trace_one.q))
-    return output
-
-def subtract_unscaled_traces(trace_one,trace_two):
-    err_one = trace_one.sigSA**2
-    err_two = trace_two.sigSA**2
-    err_cov = (2*np.cov(trace_one.sigSA,trace_two.sigSA)[0][1])
-    total_err = np.sqrt(np.abs(err_one+err_two-err_cov))
-    output_SA = (trace_one.SA - trace_two.SA)
-    output = Trace(trace_one.q, np.empty_like(trace_one.q), np.empty_like(trace_one.q), total_err, output_SA, np.empty_like(trace_one.q))
-    return output
-
-
 def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, iterations=None, temp=None):
     
     subtracted_vectors = {i: [] for i in on_off_map.keys()}
@@ -344,7 +218,7 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
                     #     on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, on))
                     try:
                         on_data = parse.parse(on_string)
-                        on_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
+                        on_data.scale(reference, qmin=QMIN, qmax=QMAX)
                     except:
                         print(on_string+"\tfailed")
                         pass
@@ -361,7 +235,7 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
                     
                     try:
                         off_data = parse.parse(off_string)
-                        off_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
+                        off_data.scale(reference, qmin=QMIN, qmax=QMAX)
                     except:
                         print(off_string+"\tfailed")
                         pass
@@ -370,7 +244,8 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
                         print(on_string+"\tfailed")
                         pass
                     else:
-                        sub_scaled = subtract_scaled_traces(on_data,off_data)
+                        # sub_scaled = subtract_scaled_traces(on_data,off_data)
+                        sub_scaled = on_data.subtract(off_data, scaled=True)
                         subtracted_vectors[on].append(sub_scaled)
 
     else:
@@ -388,14 +263,14 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
 
                 try:
                     on_data = parse.parse(on_string)
-                    on_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
+                    on_data.scale(reference, qmin=QMIN, qmax=QMAX)
                 except:
                     print(on_string+"\tfailed")
                     pass
                 
                 try:
                     off_data = parse.parse(off_string)
-                    off_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
+                    off_data.scale(reference, qmin=QMIN, qmax=QMAX)
                 except:
                     print(off_string+"\tfailed")
                     pass
@@ -404,7 +279,8 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
                     print(on_string+"\tfailed")
                     pass
                 else:
-                    sub_scaled = subtract_scaled_traces(on_data,off_data)
+                    # sub_scaled = subtract_scaled_traces(on_data,off_data)
+                    sub_scaled = on_data.subtract(off_data, scaled=True)
                     subtracted_vectors[on].append(sub_scaled)
 
     return subtracted_vectors
@@ -425,8 +301,8 @@ def static_traces(parent, samp, reps, temps, series, option=None):
                 try:
                     static_data = parse.parse(static_string)
                     # print("test1")
-                    # static_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
-                    static_data.integration_scale(reference, qmin=QMIN, qmax=QMAX)
+                    # static_data.scale(reference, qmin=QMIN, qmax=QMAX)
+                    static_data.scale(reference, qmin=QMIN, qmax=QMAX, approach='algebraic')
                     # print("test2")
                     static_scaled = Trace(static_data.q, np.empty_like(static_data.q), np.empty_like(static_data.q), static_data.scaled_sigSA, static_data.scaled_SA, static_data.Nj)
                     static.append(static_scaled)
@@ -456,7 +332,7 @@ def all_off_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, 
                     off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, off))
                     try:
                         off_data = parse.parse(off_string)
-                        off_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
+                        off_data.scale(reference, qmin=QMIN, qmax=QMAX)
                         off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
                         off_vectors.append(off_scaled)
                     except:
@@ -473,7 +349,7 @@ def all_off_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, 
                             off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
                         try:
                             off_data = parse.parse(off_string)
-                            off_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
+                            off_data.scale(reference, qmin=QMIN, qmax=QMAX)
                             off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
                             off_vectors.append(off_scaled)
                         except:
@@ -499,11 +375,11 @@ def all_vectors(parent, samp, reps, on_off_map, option=None, multitemp=None, ite
                     try:
                         on_data = parse.parse(on_string)
                         on_data = Trace(on_data.q, np.empty_like(on_data.q), np.empty_like(on_data.q), on_data.sigSA, on_data.SA, on_data.Nj)
-                        on_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
+                        on_data.scale(reference, qmin=QMIN, qmax=QMAX)
 
                         off_data = parse.parse(off_string)
                         off_data = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.sigSA, off_data.SA, off_data.Nj)
-                        off_data.alg_scale(reference, qmin=QMIN, qmax=QMAX)
+                        off_data.scale(reference, qmin=QMIN, qmax=QMAX)
                         # off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
                         # off_vectors.append(off_scaled)
                         if on_data:
@@ -512,7 +388,8 @@ def all_vectors(parent, samp, reps, on_off_map, option=None, multitemp=None, ite
                                 all_labels.append(off)
                                 all_vectors.append(on_data.SA[reference.q>0.03])
                                 all_labels.append(on)
-                                sub_scaled = subtract_scaled_traces(on_data,off_data)
+                                # sub_scaled = subtract_scaled_traces(on_data,off_data)
+                                sub_scaled = on_data.subtract(off_data, scaled=True)
                                 tr_vectors_labels.append((sub_scaled.SA[reference.q>0.03], on))
 
 
@@ -530,7 +407,7 @@ def all_vectors(parent, samp, reps, on_off_map, option=None, multitemp=None, ite
     #                         off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
     #                     try:
     #                         off_data = parse.parse(off_string)
-    #                         off_data.alg_scale(reference)
+    #                         off_data.scale(reference)
     #                         off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
     #                         off_vectors.append(off_scaled)
     #                     except:
@@ -631,18 +508,10 @@ parser.add_argument('-b', '--buffer_directory', help='location of matching buffe
 parser.add_argument('-st', '--static_directory', help='location of static files')
 parser.add_argument('-r', '--reference', help='Provide a reference image for scaling. If no reference is provided an arbitray image will be chosen to scale all others against.')
 
-
 args = parser.parse_args()
 
 
-# script, directory = sys.argv
-# reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/Trypsin/Trypsin-BA-Buffer-1/xray_images/Trypsin-BA-Buffer-1_26_-10us-10.tpkl")
-# reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20161110/CypA-3/xray_images/CypA-3_9_178ns.tpkl")
 reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
-# reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20160701/CypA-S99T/CypA-S99T-1/xray_images/CypA-S99T-1_9_75ns_off.tpkl")
-# reference = parse.parse("/Volumes/beryllium/aps_march2018/Lysozyme/Lysozyme-apo/Lysozyme-apo-Buffer-1/xray_images/Lysozyme-apo-Buffer-1_2_3C_1_23.7us.tpkl")
-# reference = parse.parse("/Volumes/beryllium/aps_march2018/Lysozyme_old/Lysozyme-apo/Lysozyme-apo-Buffer-1/xray_images/Lysozyme-apo-Buffer-1_5_3C_5_237us.tpkl")
-
 if args.reference:
     reference = parse.parse(args.reference)
 else:
@@ -712,13 +581,15 @@ if args.time_resolved_differences:
             pickle.dump(buff_avg_filt_off, pkl)
 
 
-        protein_only_avg_filt_off = {temp:buffer_subtract_scaled_traces(avg_filt_off[temp],buff_avg_filt_off[temp]) for temp in filtered_off_vectors.keys()}
+        # protein_only_avg_filt_off = {temp:buffer_subtract_scaled_traces(avg_filt_off[temp],buff_avg_filt_off[temp]) for temp in filtered_off_vectors.keys()}
+        protein_only_avg_filt_off = {temp:avg_filt_off[temp].subtract(buff_avg_filt_off[temp], buffer_scaled=True) for temp in filtered_off_vectors.keys()}
 
         with open("protein_only_avg_filt_off_dict.pkl", "wb") as pkl:
             pickle.dump(protein_only_avg_filt_off, pkl)
 
 
-        mean_TR = {temp:{key: subtract_unscaled_traces(average_traces(filtered_vectors[temp][key]),average_traces(buffer_filtered_vectors[temp][key])) for key in filtered_vectors[temp].keys()} for temp in filtered_off_vectors.keys()}
+        # mean_TR = {temp:{key: subtract_unscaled_traces(average_traces(filtered_vectors[temp][key]),average_traces(buffer_filtered_vectors[temp][key])) for key in filtered_vectors[temp].keys()} for temp in filtered_off_vectors.keys()}
+        mean_TR = {temp:{key: average_traces(filtered_vectors[temp][key]).subtract(average_traces(buffer_filtered_vectors[temp][key])) for key in filtered_vectors[temp].keys()} for temp in filtered_off_vectors.keys()}
         for temp in mean_TR.keys():
             for  diff in mean_TR[temp].keys():
                 mean_TR[temp][diff].write_dat(samp+"_"+temp+"_diff_"+diff+".dat")
@@ -726,7 +597,8 @@ if args.time_resolved_differences:
         with open("mean_TR_dict.pkl", "wb") as pkl:
             pickle.dump(mean_TR, pkl)
 
-        showme = {temp:{key: add_unscaled_traces(protein_only_avg_filt_off[temp],mean_TR[temp][key]) for key in mean_TR[temp].keys()} for temp in filtered_off_vectors.keys()}
+        # showme = {temp:{key: add_unscaled_traces(protein_only_avg_filt_off[temp],mean_TR[temp][key]) for key in mean_TR[temp].keys()} for temp in filtered_off_vectors.keys()}
+        showme = {temp:{key: protein_only_avg_filt_off[temp].add(mean_TR[temp][key]) for key in mean_TR[temp].keys()} for temp in filtered_off_vectors.keys()}
 
         for temp in showme.keys():
             for itm in showme[temp].keys():
@@ -765,11 +637,12 @@ if args.time_resolved_differences:
         protein_only_avg_filt_off = buffer_subtract_scaled_traces(avg_filt_off,buff_avg_filt_off)
         protein_only_avg_filt_off.write_dat(samp+"_protein_only_average_off_filtered_"+".dat")
         # protein_only_avg_filt_off.buffer_scale(protein_only_avg_filt_off)
-        mean_TR = {key: subtract_unscaled_traces(average_traces(filtered_vectors[key]),average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}
+        # mean_TR = {key: subtract_unscaled_traces(average_traces(filtered_vectors[key]),average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}
+        mean_TR = {key: average_traces(filtered_vectors[key]).subtract(average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}
         for diff in mean_TR.keys():
             mean_TR[diff].write_dat(samp+"_diff_"+diff+".dat")
         #     value.buffer_scale(protein_only_avg_filt_off)
-        showme = {key: add_unscaled_traces(protein_only_avg_filt_off,mean_TR[key]) for key in mean_TR.keys()}
+        showme = {key: protein_only_avg_filt_off.add(mean_TR[key]) for key in mean_TR.keys()}
         # showme["750ns"].write_dat("first_output.dat")
         # print(showme.keys())
         for itm in showme.keys():
@@ -905,7 +778,7 @@ elif args.static_directory:
     buffs = static_traces(parent2, samp2, reps2, temps2, series2)
     for temp in statics.keys():
         for dilution in statics[temp].keys():
-            kicker = subtract_unscaled_traces(statics[temp][dilution][0], buffs[temp]['B'][0])
+            kicker = statics[temp][dilution][0].subtract(buffs[temp]['B'][0])
             kicker.write_dat(samp+"_static_"+temp+"C_"+dilution+"_filtered_buffersubtracted_average"+".dat")
             # statics[temp][dilution][0].write_dat(samp+"_static_"+temp+"C_"+dilution+"_filtered_average"+".dat")
             # print("{} and {} worked".format(temp,dilution))

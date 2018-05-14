@@ -70,8 +70,8 @@ for temp in TEMPS:
 	new["I_0s_errors"] = ierrorz
 	spf = new.I_pc0/new.I_0
 	spf_error = spf*np.sqrt((new.sigSA_pc0/new.I_pc0)**2 + (new.I_0s_errors/new.I_0)**2) ### https://terpconnect.umd.edu/~toh/models/ErrorPropagation.pdf
-	old_dog_new_tricks = Trace(new.q, np.empty_like(new.q), np.empty_like(new.q), spf_error, spf, np.empty_like(new.q))
-	old_dog_new_tricks.write_dat(samp+"_"+temp+"_spf"+".dat")
+	structure_packing_factor = Trace(new.q, np.empty_like(new.q), np.empty_like(new.q), spf_error, spf, np.empty_like(new.q))
+	structure_packing_factor.write_dat(samp+"_"+temp+"_spf"+".dat")
 
 # print(new)
 
