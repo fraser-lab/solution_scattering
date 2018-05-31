@@ -26,14 +26,12 @@ class Trace(object):
 		:param qmax: Maximum q for scaling (default 5.1925)
         :returns: Scaled SA and sigSA curves (which also get written on the trace as self.scaled_SA, self.scaled_sigSA)
 		"""
-		SA_var = self.SA[self.q>=qmin] ###0.0025 works for full q across all cypa
-		SA_var = SA_var[self.q<=qmax]  ###5.1925 works for full q across all cypa
-		SA_ref = ref.SA[self.q>=qmin]
-		SA_ref = ref.SA[self.q<=qmax]
+		SA_var = self.SA[self.q>=qmin && self.q<=qmax] ###0.0025 works for full q across all cypa
+		 ###5.1925 works for full q across all cypa
+		SA_ref = ref.SA[self.q>=qmin && self.q<=qmax]
 
 		if approach == "algebraic":
-			q = ref.q[self.q>=qmin]
-			q = ref.q[self.q<=qmax]
+			q = ref.q[self.q>=qmin && self.q<=qmax]
 			q_SA_ref = SA_ref*q
 			q_SA_var = SA_var*q
 			top = np.dot(q_SA_var,q_SA_ref)
@@ -47,8 +45,7 @@ class Trace(object):
 			scalar = scalar_projection / ref_norm
 
 		elif approach == "integration":
-			Nj = ref.Nj[self.q>=qmin]
-			Nj = ref.Nj[self.q<=qmax]
+			Nj = ref.Nj[self.q>=qmin && self.q<=qmax]
 			top = np.dot(SA_var,Nj)
 			bottom = np.dot(SA_ref,Nj)
 			scalar = top/bottom
