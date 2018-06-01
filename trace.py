@@ -17,7 +17,7 @@ class Trace(object):
 		self. SA = SA
 		self.Nj = Nj
 
-	def scale(self, ref, qmin=0.0025, qmax=5.1925, approach="algebraic"):
+	def scale(self, ref, qmin=0.0025, qmax=5.1925, approach="projection"):
 		"""
                 Scale by the total number of scattered photons
 		

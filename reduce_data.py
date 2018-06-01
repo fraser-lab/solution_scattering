@@ -634,7 +634,7 @@ if args.time_resolved_differences:
         buff_avg_filt_off = average_traces(buffer_filtered_off_vectors)
         buff_avg_filt_off.buffer_scale(avg_filt_off)
         buff_avg_filt_off.write_dat(samp+"_buffer_average_off_filtered_"+".dat")
-        protein_only_avg_filt_off = buffer_subtract_scaled_traces(avg_filt_off,buff_avg_filt_off)
+        protein_only_avg_filt_off = avg_filt_off.subtract(buff_avg_filt_off, buffer_scaled=True)
         protein_only_avg_filt_off.write_dat(samp+"_protein_only_average_off_filtered_"+".dat")
         # protein_only_avg_filt_off.buffer_scale(protein_only_avg_filt_off)
         # mean_TR = {key: subtract_unscaled_traces(average_traces(filtered_vectors[key]),average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}

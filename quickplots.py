@@ -5,6 +5,7 @@ from saxs_plots import real_space_plotter
 
 dats = glob.glob('./*dat')
 diffs = [item for item in dats if "diff" in item]
+sums = [item for item in dats if "sum" in item]
 avgs = [item for item in dats if "diff" not in item]
 spfs = [item for item in dats if "spf" in item]
 
@@ -23,11 +24,11 @@ subselection = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us"
 DATAA = []
 labels = []
 ii = -1
-for item in pc0s:
+for item in sums:
     # for sub in subselection:
         # if sub in item:
-    d1, samp, temp, dtype,d5,d6,d7 = item.split('_')
-    labels.append(temp)
+    # d1, samp, temp, dtype,d5,d6,d7 = item.split('_')
+    # labels.append(temp)
     if ii < 0:
         ii=0
         nii = ii
@@ -42,4 +43,4 @@ for item in pc0s:
 # plt.xscale('log')
 # plt.show()
 
-real_space_plotter(DATAA, name='output', labels=labels)
+real_space_plotter(DATAA, name='output')
