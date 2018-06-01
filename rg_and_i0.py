@@ -1,23 +1,22 @@
 
 import pandas as pd
 import numpy as np
-# from scipy.stats import linregress
 import scipy.optimize
-# import matplotlib.pyplot as plt
 import pathlib
 from sys import argv
 from collections import defaultdict
 from trace import Trace
+from sys import argv
+
 
 def linear(x,a,b):
 	return b-a*x
 
-from sys import argv
-from trace import Trace
 
 script, samp_dir = argv
-
 samp_dir_path = pathlib.Path(samp_dir)
+
+### Note : change this pattern to capture different dats within a directory
 samp_files = list(samp_dir_path.glob(pattern='*sum*.dat'))
 
 
