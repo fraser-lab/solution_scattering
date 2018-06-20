@@ -6,6 +6,7 @@ if sys.version_info[0] < 3:
     sys.exit(1)
 
 ### import needed modules & functions
+from collections import namedtuple
 from time import clock
 import parse
 import pathlib
@@ -23,13 +24,16 @@ from saxs_plots import real_space_plotter
 import pickle
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
+OPTION_STATUS = False
+BUFFER_HIGH_CUTOFF = 50
+QMIN = 0.0025
+QMAX = 4.28
+CHI_OUTLIER = 1.5
 
 
-
-
-def sample_map_multitemp(samp_dir, multitemp=None):
+def sample_map_multitemp(samp_dir, multitemp=None, low_cutoff=0, high_cutoff=1000):
     samp_dir = pathlib.Path(samp_dir)
-    samp_files = list(samp_dir.glob(pattern='**/*.tpkl'))
+    samp_files = list(samp_dir.glob(pattern='*/*.tpkl'))
     # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
     t0 = clock()
     REPS = []
@@ -59,6 +63,8 @@ def sample_map_multitemp(samp_dir, multitemp=None):
     else:
         pass
     REPS = sorted(list(set(REPS)), key=float)
+    REPS = [x for x in REPS if int(x) > low_cutoff]
+    REPS = [x for x in REPS if int(x) < high_cutoff]
     TIMES = list(set(TIMES))
     OFFS = [item for item in TIMES if "-10us" in item]
     ONS = [item for item in TIMES if "-10us" not in item]
@@ -72,9 +78,9 @@ def sample_map_multitemp(samp_dir, multitemp=None):
     # on_off_map = {k:v for k,v in (zip(clean_ons,sorted(OFFS, key=parse.alphanum_key)))}
     return parent, samp, ITERATIONS, TEMPS, REPS, on_off_map
 
-def sample_map(file_dir):
+def sample_map(file_dir, low_cutoff=0, high_cutoff=1000):
     file_dir = pathlib.Path(file_dir)
-    files = list(file_dir.glob(pattern='**/*.tpkl'))
+    files = list(file_dir.glob(pattern='*.tpkl'))
     # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
     t0 = clock()
     REPS = []
@@ -85,14 +91,20 @@ def sample_map(file_dir):
         try:
             samp, rep, time, onoff = name.split('_')
         except:
-            samp, rep, time = name.split('_')
-            time = time.replace('.tpkl','')
+            try:
+                samp, rep, time = name.split('_')
+                time = time.replace('.tpkl','')
+            except:
+                print("Excluding {}".format(name))
+                continue 
         # samp, rep, time = name.split('_')
         # time = time.replace('.tpkl','')
         REPS.append(rep)
         TIMES.append(time)
 
     REPS = sorted(list(set(REPS)), key=float)
+    REPS = [x for x in REPS if int(x) > low_cutoff]
+    REPS = [x for x in REPS if int(x) < high_cutoff]
     TIMES = list(set(TIMES))
     OFFS = [item for item in TIMES if "-10us" in item]
     ONS = [item for item in TIMES if "-10us" not in item]
@@ -104,9 +116,9 @@ def sample_map(file_dir):
 
     return parent, samp, REPS, on_off_map
 
-def static_map(samp_dir, buffer_d=None):
+def static_map(samp_dir, buffer_d=None, low_cutoff=0, high_cutoff=1000):
     samp_dir = pathlib.Path(samp_dir)
-    samp_files = list(samp_dir.glob(pattern='**/*.tpkl'))
+    samp_files = list(samp_dir.glob(pattern='*.tpkl'))
     # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
     # t0 = clock()
     # sample_map = []
@@ -144,6 +156,8 @@ def static_map(samp_dir, buffer_d=None):
         # TIMES.append(time)
 
     REPS = sorted(list(set(REPS)), key=float)
+    REPS = [x for x in REPS if int(x) > low_cutoff]
+    REPS = [x for x in REPS if int(x) < high_cutoff]
     TEMPS = sorted(list(set(TEMPS)), key=float)
     SERIES = sorted(list(set(SERIES)))
     # TIMES = list(set(TIMES))
@@ -218,6 +232,7 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
                     #     on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, on))
                     try:
                         on_data = parse.parse(on_string)
+                        
                         on_data.scale(reference, qmin=QMIN, qmax=QMAX)
                     except:
                         print(on_string+"\tfailed")
@@ -263,20 +278,21 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
 
                 try:
                     on_data = parse.parse(on_string)
+
                     on_data.scale(reference, qmin=QMIN, qmax=QMAX)
                 except:
-                    print(on_string+"\tfailed")
+                    print(on_string+"\tfailed to parse or scale ON data")
                     pass
                 
                 try:
                     off_data = parse.parse(off_string)
                     off_data.scale(reference, qmin=QMIN, qmax=QMAX)
                 except:
-                    print(off_string+"\tfailed")
+                    print(off_string+"\tfailed to parse or scale OFF data")
                     pass
 
                 if isinstance(on_data,type(None)) or isinstance(off_data,type(None)):
-                    print(on_string+"\tfailed")
+                    print(on_string+"\tfailed because on or off is None")
                     pass
                 else:
                     # sub_scaled = subtract_scaled_traces(on_data,off_data)
@@ -506,22 +522,20 @@ parser.add_argument('-mt', '--multitemp', help='Multiple temperatures within eac
 parser.add_argument('-s', '--sample_directory', help='location of files to be analyzed')
 parser.add_argument('-b', '--buffer_directory', help='location of matching buffer files for TR analysis')
 parser.add_argument('-st', '--static_directory', help='location of static files')
-parser.add_argument('-r', '--reference', help='Provide a reference image for scaling. If no reference is provided an arbitray image will be chosen to scale all others against.')
-
+parser.add_argument('-r', '--reference', help='Provide a reference image for scaling. If no reference is provided an arbitrary image will be chosen to scale all others against.')
+parser.add_argument('-el', '--exclude_repeats_low', help='Choose repeats at the start of a dataset to exclude based on fast radiation damage effects', type=int, default=0)
+parser.add_argument('-eh', '--exclude_repeats_high', help='Choose repeats at the end of a dataset to exclude based on slow radiation damage effects', type=int, default=10000)
 args = parser.parse_args()
 
 
-reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
+reference = parse.parse("/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
 if args.reference:
     reference = parse.parse(args.reference)
 else:
     pass
 
 
-QMIN = 0.0025
-# QMAX = 5.1925
-QMAX = 4.28
-CHI_OUTLIER = 1.5
+
 t_shortlist = ["-10.1us", "1us", "10us", "100us", "1ms"]
 # t_shortlist = ["562ns"]
 # t_shortlist = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us"]
@@ -537,11 +551,11 @@ if args.time_resolved_differences:
 
 
     if args.multitemp:
-        parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(args.sample_directory, multitemp=args.multitemp)
+        parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(args.sample_directory, multitemp=args.multitemp, low_cutoff=args.exclude_repeats_low, high_cutoff=args.exclude_repeats_high)
         filtered_off_vectors = {}
         filtered_vectors = {}
         for temp in temps:
-            subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
+            subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp, option=True)
             filtered_vectors[temp] = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
             all_off_vectors = all_off_traces(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
             filtered_off_vectors[temp] = iterative_chi_filter(all_off_vectors)
@@ -551,12 +565,12 @@ if args.time_resolved_differences:
         with open("filtered_vectors_dict.pkl", "wb") as pkl:
             pickle.dump(filtered_vectors, pkl)
 
-        parent2, samp2, iterations2, temps2, reps2, on_off_map2 = sample_map_multitemp(args.buffer_directory, multitemp=args.multitemp)
+        parent2, samp2, iterations2, temps2, reps2, on_off_map2 = sample_map_multitemp(args.buffer_directory, multitemp=args.multitemp, low_cutoff=args.exclude_repeats_low, high_cutoff=args.exclude_repeats_high)
         buffer_filtered_off_vectors = {}
         buffer_filtered_vectors = {}
 
         for temp2 in temps2:
-            buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2, multitemp=args.multitemp, iterations=iterations2, temp=temp2)
+            buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2, multitemp=args.multitemp, iterations=iterations2, temp=temp2, option=True)
             buffer_filtered_vectors[temp2] = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
             buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2, multitemp=args.multitemp, iterations=iterations2, temp=temp2)
 
@@ -613,17 +627,20 @@ if args.time_resolved_differences:
 
     else:
 
-        parent, samp, reps, on_off_map = sample_map(args.sample_directory)
-        subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map, option=False)
+        parent, samp, reps, on_off_map = sample_map(args.sample_directory, low_cutoff=args.exclude_repeats_low, high_cutoff=args.exclude_repeats_high)
+        
+        subtracted_vectors = time_resolved_traces(parent, samp, reps, on_off_map, option=OPTION_STATUS)
         filtered_vectors = {key:iterative_chi_filter(subtracted_vectors[key]) for key in subtracted_vectors.keys()}
 
-        all_off_vectors = all_off_traces(parent, samp, reps, on_off_map, option=False)
+        all_off_vectors = all_off_traces(parent, samp, reps, on_off_map, option=OPTION_STATUS)
         filtered_off_vectors = iterative_chi_filter(all_off_vectors)
 
-        parent2, samp2, reps2, on_off_map2 = sample_map(args.buffer_directory)
-        buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2, option=False)
+        parent2, samp2, reps2, on_off_map2 = sample_map(args.buffer_directory, low_cutoff=args.exclude_repeats_low, high_cutoff=BUFFER_HIGH_CUTOFF)
+        
+        buffer_TR_subtracted_vectors = time_resolved_traces(parent2, samp2, reps2, on_off_map2, option=OPTION_STATUS)
         buffer_filtered_vectors = {key:iterative_chi_filter(buffer_TR_subtracted_vectors[key]) for key in buffer_TR_subtracted_vectors.keys()}
-        buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2, option=False)
+        
+        buffer_all_off_vectors = all_off_traces(parent2, samp2, reps2, on_off_map2, option=OPTION_STATUS)
         buffer_filtered_off_vectors = iterative_chi_filter(buffer_all_off_vectors)
 
 
@@ -634,7 +651,7 @@ if args.time_resolved_differences:
         buff_avg_filt_off = average_traces(buffer_filtered_off_vectors)
         buff_avg_filt_off.buffer_scale(avg_filt_off)
         buff_avg_filt_off.write_dat(samp+"_buffer_average_off_filtered_"+".dat")
-        protein_only_avg_filt_off = buffer_subtract_scaled_traces(avg_filt_off,buff_avg_filt_off)
+        protein_only_avg_filt_off = avg_filt_off.subtract(buff_avg_filt_off, buffer_scaled=True)
         protein_only_avg_filt_off.write_dat(samp+"_protein_only_average_off_filtered_"+".dat")
         # protein_only_avg_filt_off.buffer_scale(protein_only_avg_filt_off)
         # mean_TR = {key: subtract_unscaled_traces(average_traces(filtered_vectors[key]),average_traces(buffer_filtered_vectors[key])) for key in filtered_vectors.keys()}
@@ -770,9 +787,9 @@ elif args.svd:
 ###End SVD on scaled frames###
 
 elif args.static_directory:
-    protein = static_map(args.static_directory)
+    protein = static_map(args.static_directory, low_cutoff=args.exclude_repeats_low, high_cutoff=args.exclude_repeats_high)
     parent, samp, reps, temps, series = protein
-    buff = static_map(args.buffer_directory, buffer_d=True)
+    buff = static_map(args.buffer_directory, buffer_d=True, low_cutoff=args.exclude_repeats_low, high_cutoff=args.exclude_repeats_high)
     parent2, samp2, reps2, temps2, series2 = buff
     statics = static_traces(parent, samp, reps, temps, series)
     buffs = static_traces(parent2, samp2, reps2, temps2, series2)

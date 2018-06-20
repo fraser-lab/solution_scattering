@@ -49,7 +49,7 @@ for temp in TEMPS:
 	    # model = linregress(x,y)
 	    popt, pcov = scipy.optimize.curve_fit(linear, x, y, method='lm', p0=[-10,10], maxfev=50000)
 
-	    I_0 = 1/popt[1]
+	    I_0 = np.exp(popt[1])
 	    slope = popt[0]
 	    I_0_error = np.sqrt(pcov[1][1])
 	    MW = 18500

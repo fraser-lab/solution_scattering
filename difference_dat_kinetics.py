@@ -7,11 +7,10 @@ from relax import relaxation_fit, single_step_relaxation, two_step_relaxation, t
 from parse import parse
 import trace
 
-PREFIX = "_data/CypA-1_November/CypA-1_diff_" #
+PREFIX = "CypA-2_diff_" #
 # PREFIX = "_data/"
-# 
-TIMES_STR = ["-10.1us", "562ns","750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us","23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us","316us", "422us" , "562us", ]# "750us","1ms"
-INITIAL_GUESS = (-1, 1./1000, 1, 1./10000, 0)# 1./1000000, 3)#, ) # (-1, 1./10000, 1)(.8,1./10000, 2) #
+TIMES_STR = ["-10.1us", "562ns","750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us","23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us", "316us", "422us", "562us"] # "750us", "1ms"
+INITIAL_GUESS = (-1, 1./1000, 1, 1./10000, 5) # 1./1000000, 3) # (-1, 1./10000, 1)(.8,1./10000, 2) #
 RELAXATION_STEPCOUNT = two_step_relaxation #two_step_relaxation #single_step_relaxation 
 QMIN = 0.03
 QMAX = 0.0525

@@ -15,6 +15,7 @@ Alex Wolff (LifeHasOrder)
 ### Contents
 
 ```
+difference_dat_kinetics.py         #tools to calculate kinetics from changes between time-resolved dat files
 parse.py                           #library for reading SAXS data
 quickplots.py                      #visual dat files from reduce_data
 saxs_plots.py                      #plotting library for SAXS data
