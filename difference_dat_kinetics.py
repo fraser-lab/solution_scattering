@@ -7,11 +7,15 @@ from relax import relaxation_fit, single_step_relaxation, two_step_relaxation, t
 from parse import parse
 import trace
 
-PREFIX = "time_resolved_integration_scaling/nov_2016_cypa_1/CypA-1_diff_" #
+PREFIX = "_data/CypA-1_November/CypA-1_diff_" #
 # PREFIX = "_data/"
-TIMES_STR = ["-10.1us", "562ns","750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us","23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us", "316us", "422us", "562us", "750us", "1ms"]
-INITIAL_GUESS = (-1, 1./1000, 1, 1./10000, 3.4) # 1./1000000, 3) # (-1, 1./10000, 1)(.8,1./10000, 2) #
+# 
+TIMES_STR = ["-10.1us", "562ns","750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us","23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us","316us", "422us" , "562us", ]# "750us","1ms"
+INITIAL_GUESS = (-1, 1./1000, 1, 1./10000, 0)# 1./1000000, 3)#, ) # (-1, 1./10000, 1)(.8,1./10000, 2) #
 RELAXATION_STEPCOUNT = two_step_relaxation #two_step_relaxation #single_step_relaxation 
+QMIN = 0.03
+QMAX = 0.0525
+
 
 def time_str_to_float(time_string):
   number = float(time_string[:-2])
@@ -50,7 +54,7 @@ def plot_differences(tuple_list, filename="differences.png"):
 	return fig,ax
 
 
-def integrate_area(trace, q_min = 0.03, q_max = 0.06):
+def integrate_area(trace, q_min = QMIN, q_max = QMAX):
 	q = trace.get_q()
 	index_low = np.nonzero(q>=q_min)[0][0]
 	index_high = np.nonzero(q<=q_max)[0][-1]
@@ -59,7 +63,7 @@ def integrate_area(trace, q_min = 0.03, q_max = 0.06):
 	series_error = []
 	for i in range(index_low, index_high+1):
 		delta_q = q[i+1] - q[i]
-		print(delta_q)
+		# print(delta_q)
 		I_section = trace.SA[i] * delta_q
 		error_section = trace.sigSA[i] * delta_q
 		series_I.append(I_section)
@@ -97,6 +101,7 @@ def run(prefix, times_str):
 		print(parameters)
 
 	print("Errors Sum/Areas Sum: {}".format(sum(errors)/sum(areas)))
+	print("K2 STD/ K2obs: {}".format(np.sqrt(covariances[3][3])/parameters[3]))
 	plot_integrated_areas(traces, y_calc)
 	plot_differences(traces)
 
