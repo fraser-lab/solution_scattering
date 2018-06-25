@@ -29,7 +29,7 @@ for file in samp_files:
 	y = np.log(data.SA)
 	data_mask = np.array(x, dtype=bool)
 	data_mask[x>0.008]=False
-	data_mask[x<q_min_squared]=False
+	data_mask[x<float(q_min_squared)]=False
 	x_masked = x[data_mask]
 	y_masked = y[data_mask]
 
