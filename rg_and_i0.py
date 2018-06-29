@@ -17,7 +17,7 @@ script, samp_dir, q_min_squared = argv
 samp_dir_path = pathlib.Path(samp_dir)
 
 ### Note : change this pattern to capture different dats within a directory
-samp_files = list(samp_dir_path.glob(pattern='*sum*.dat'))
+samp_files = list(samp_dir_path.glob(pattern='*corrected*.dat'))
 
 
 for file in samp_files:

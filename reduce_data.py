@@ -527,8 +527,8 @@ parser.add_argument('-el', '--exclude_repeats_low', help='Choose repeats at the 
 parser.add_argument('-eh', '--exclude_repeats_high', help='Choose repeats at the end of a dataset to exclude based on slow radiation damage effects', type=int, default=10000)
 args = parser.parse_args()
 
-
-reference = parse.parse("/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
+reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
+# reference = parse.parse("/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
 if args.reference:
     reference = parse.parse(args.reference)
 else:
