@@ -45,7 +45,8 @@ class Trace(object):
 			ref_norm = LA.norm(SA_ref)
 			ref_hat = SA_ref / ref_norm
 			scalar_projection = np.dot(SA_var, ref_hat)
-			scalar = scalar_projection / ref_norm
+			scalar = ref_norm / scalar_projection
+			print(scalar)
 
 		elif approach == "integration":
 			Nj = ref.Nj[self.q>=qmin]

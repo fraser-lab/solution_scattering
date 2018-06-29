@@ -4,6 +4,7 @@ import pathlib
 from sys import argv
 from trace import Trace
 from parse import parse
+# import matplotlib.pyplot as plt
 
 ### take command line input
 script, tr_dir, spf_file = argv
@@ -27,10 +28,19 @@ avg_off_spf_corrected = Trace(avg_off.q, np.empty_like(avg_off.q), np.empty_like
 avg_off_spf_corrected.scale(avg_off, qmin=0.03, qmax=0.1, approach="projection")
 avg_off_spf_corrected_scaled = Trace(avg_off.q, np.empty_like(avg_off.q), np.empty_like(avg_off.q), avg_off_spf_corrected.scaled_sigSA, avg_off_spf_corrected.scaled_SA, np.empty_like(avg_off.q))
 avg_off_spf_corrected_scaled.write_dat(avg_off_protein_only_file.replace('.dat','spf-corrected.dat'))
+# plt.plot(avg_off.q,avg_off.SA, label='avg_off')
+# plt.plot(avg_off_spf_corrected.q,avg_off_spf_corrected.SA, label='avg_off_spf_corr')
+# plt.plot(avg_off_spf_corrected_scaled.q,avg_off_spf_corrected_scaled.SA, label='avg_off_spf_corr_scaled')
 
 ### add corrected protein-only signal to each TR difference signal
 for file in tr_diff_files:
 	name = file.name
 	tr_diff = parse(name)
-	tr_diff.add(avg_off_spf_corrected_scaled)
-	tr_diff.write_dat(name.replace('.dat','_spf-corrected.dat'))
+	tr_sum = tr_diff.add(avg_off_spf_corrected_scaled)
+	tr_sum.write_dat(name.replace('.dat','_spf-corrected.dat'))
+
+# plt.xscale('log')
+# plt.legend()
+# plt.show()
+
+
