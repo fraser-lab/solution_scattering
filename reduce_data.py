@@ -380,7 +380,7 @@ def all_vectors(parent, samp, reps, on_off_map, option=None, multitemp=None, ite
     tr_vectors_labels = []
 
 
-    if multitemp:
+    if args.multitemp:
         for iteration in iterations:
 
             for n in reps:
@@ -412,22 +412,37 @@ def all_vectors(parent, samp, reps, on_off_map, option=None, multitemp=None, ite
                     except:
                         print(off_string+"\tfailed")
 
-    # else:
-    #     for n in reps:
-    #                 for off in on_off_map.values():
+    else:
 
-    #                     # off_string = ("{0}/{1}_{2}_{3}_off.tpkl".format(parent, samp, n, off))
-    #                     if option:
-    #                         off_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, off))
-    #                     else:
-    #                         off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
-    #                     try:
-    #                         off_data = parse.parse(off_string)
-    #                         off_data.scale(reference)
-    #                         off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
-    #                         off_vectors.append(off_scaled)
-    #                     except:
-    #                         print(off_string+"\tfailed")
+        for n in reps:
+            # for off in on_off_map.values():
+            for on, off in on_off_map.items():
+                on_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, on))
+                off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
+                try:
+                    on_data = parse.parse(on_string)
+                    on_data = Trace(on_data.q, np.empty_like(on_data.q), np.empty_like(on_data.q), on_data.sigSA, on_data.SA, on_data.Nj)
+                    on_data.scale(reference, qmin=QMIN, qmax=QMAX)
+
+                    off_data = parse.parse(off_string)
+                    off_data = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.sigSA, off_data.SA, off_data.Nj)
+                    off_data.scale(reference, qmin=QMIN, qmax=QMAX)
+                    # off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
+                    # off_vectors.append(off_scaled)
+                    if on_data:
+                        if off_data:
+                            all_vectors.append(off_data.SA[reference.q>0.03])
+                            all_labels.append(off)
+                            all_vectors.append(on_data.SA[reference.q>0.03])
+                            all_labels.append(on)
+                            # sub_scaled = subtract_scaled_traces(on_data,off_data)
+                            sub_scaled = on_data.subtract(off_data, scaled=True)
+                            tr_vectors_labels.append((sub_scaled.SA[reference.q>0.03], on))
+
+
+                except:
+                    print(off_string+"\tfailed")
+
 
     return all_vectors, all_labels, tr_vectors_labels
 
@@ -676,19 +691,20 @@ if args.time_resolved_differences:
 
 elif args.svd:
 
-    parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(args.sample_directory, multitemp=args.multitemp)
     multi_all_vectors = {}
     multi_all_labels = {}
     tr_vectors_labels = {}
-    # filtered_vectors = {}
+
     if args.multitemp:
+        parent, samp, iterations, temps, reps, on_off_map = sample_map_multitemp(args.sample_directory, multitemp=args.multitemp, low_cutoff=args.exclude_repeats_low, high_cutoff=args.exclude_repeats_high)
         for temp in temps:
             multi_all_vectors[temp], multi_all_labels[temp], tr_vectors_labels[temp] = all_vectors(parent, samp, reps, on_off_map, multitemp=args.multitemp, iterations=iterations, temp=temp)
         full_list = [item[0] for item in tr_vectors_labels['3C']]
         full_labels = [item[1] for item in tr_vectors_labels['3C']]
+    
     else:
+        parent, samp, reps, on_off_map = sample_map(args.sample_directory, low_cutoff=args.exclude_repeats_low, high_cutoff=args.exclude_repeats_high)
         multi_all_vectors, multi_all_labels, tr_vectors_labels = all_vectors(parent, samp, reps, on_off_map, multitemp=args.multitemp)
-
         full_list = [item[0] for item in tr_vectors_labels]
         full_labels = [item[1] for item in tr_vectors_labels]
 
