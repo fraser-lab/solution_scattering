@@ -24,7 +24,7 @@ subselection = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us"
 DATAA = []
 labels = []
 ii = -1
-for item in sums:
+for item in spfs:
     # for sub in subselection:
         # if sub in item:
     # d1, samp, temp, dtype,d5,d6,d7 = item.split('_')
@@ -38,9 +38,10 @@ for item in sums:
         nii = N-ii    
     data = pd.read_table(item,skiprows=1,names=['q','SA','sigSA'],delim_whitespace=True,engine='python')
     DATAA.append(data)
+    labels.append(item)
 #             plt.plot(data.q,data.I,label=item.split('_')[-1].replace('.dat',''),color=plt.cm.inferno(nii))
 # plt.legend()
 # plt.xscale('log')
 # plt.show()
 
-real_space_plotter(DATAA, name='output')
+real_space_plotter(DATAA, name='output', labels=labels)

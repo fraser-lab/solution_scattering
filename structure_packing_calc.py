@@ -24,7 +24,7 @@ for file in samp_files:
 	TEMPS.append(temp)
 	CONCS.append(conc)
 	data = pd.read_table(file,names=["q","SA","sigSA"], delim_whitespace=True, skiprows=1)
-	data = data[data.q>=0.03]
+	# data = data[data.q>=0.03]
 	master[temp][conc]=data
 
 TEMPS = sorted(list(set(TEMPS)))
@@ -60,11 +60,11 @@ for temp in TEMPS:
 	    I_0s_errors.append(I_0_error)
 
 	iz = pd.DataFrame(I_0s)
-	iz.index = iz.index + 4
+	iz.index = iz.index
 	az = pd.DataFrame(A_s)
-	az.index = az.index + 4
+	az.index = az.index
 	ierrorz = pd.DataFrame(I_0s_errors)
-	ierrorz.index = ierrorz.index + 4
+	ierrorz.index = ierrorz.index
 
 	new["I_0"] = iz
 	new["A"] = az
