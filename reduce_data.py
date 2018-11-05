@@ -33,29 +33,32 @@ CHI_OUTLIER = 1.5
 
 def sample_map_multitemp(samp_dir, multitemp=None, low_cutoff=0, high_cutoff=1000):
     samp_dir = pathlib.Path(samp_dir)
-    samp_files = list(samp_dir.glob(pattern='*/*.tpkl'))
-    # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
+    samp_files = list(samp_dir.glob(pattern='*/*.dat'))
+    # buffer_files = list(buff.glob(pattern='**/*.dat'))
     t0 = clock()
     REPS = []
     TIMES = []
     ITERATIONS = []
     TEMPS = []
+    FILE_NUMBERS = []
     for file in samp_files:
         name = file.name
         parent = file.parent
         if multitemp:
             samp, iteration, temp, rep, time = name.split('_')
-            time = time.replace('.tpkl','')
+            time = time.replace('.dat','')
             ITERATIONS.append(iteration)
             TEMPS.append(temp)
         else:
             try:
-                samp, rep, time, onoff = name.split('_')
+                # samp, rep, time, onoff = name.split('_')
+                samp, file_number, time, rep = name.split('_')
             except:
                 samp, rep, time = name.split('_')
-                time = time.replace('.tpkl','')
+                time = time.replace('.dat','')
         REPS.append(rep)
         TIMES.append(time)
+        FILE_NUMBERS.append(file_number)
         
     if multitemp:
         ITERATIONS = sorted(list(set(ITERATIONS)), key=float)
@@ -80,25 +83,28 @@ def sample_map_multitemp(samp_dir, multitemp=None, low_cutoff=0, high_cutoff=100
 
 def sample_map(file_dir, low_cutoff=0, high_cutoff=1000):
     file_dir = pathlib.Path(file_dir)
-    files = list(file_dir.glob(pattern='*.tpkl'))
-    # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
+    files = list(file_dir.glob(pattern='*.dat'))
+    # buffer_files = list(buff.glob(pattern='**/*.dat'))
     t0 = clock()
     REPS = []
     TIMES = []
+    FILE_NUMBERS = []
     for file in files:
         name = file.name
         parent = file.parent
         try:
-            samp, rep, time, onoff = name.split('_')
+            # samp, rep, time, onoff = name.split('_')
+            samp, file_number, time, rep = name.split('_')
+            rep = rep.replace('.dat','')
         except:
             try:
                 samp, rep, time = name.split('_')
-                time = time.replace('.tpkl','')
+                time = time.replace('.dat','')
             except:
                 print("Excluding {}".format(name))
                 continue 
         # samp, rep, time = name.split('_')
-        # time = time.replace('.tpkl','')
+        # time = time.replace('.dat','')
         REPS.append(rep)
         TIMES.append(time)
 
@@ -116,15 +122,60 @@ def sample_map(file_dir, low_cutoff=0, high_cutoff=1000):
 
     return parent, samp, REPS, on_off_map
 
+
+def new_map(file_dir, low_cutoff=0, high_cutoff=1000):
+    file_dir = pathlib.Path(file_dir)
+    files = list(file_dir.glob(pattern='*.dat'))
+    # buffer_files = list(buff.glob(pattern='**/*.dat'))
+    t0 = clock()
+    REPS = []
+    # TIMES = []
+    # FILE_NUMBERS = []
+    file_map = {}
+    for file in files:
+        name = file.name
+        parent = file.parent
+        try:
+            # samp, rep, time, onoff = name.split('_')
+            samp, file_number, time, rep = name.split('_')
+            rep = rep.replace('.dat','')
+        except:
+            try:
+                samp, rep, time = name.split('_')
+                time = time.replace('.dat','')
+            except:
+                print("Excluding {}".format(name))
+                continue 
+        file_map[file_number]=[time,rep]
+        # samp, rep, time = name.split('_')
+        # time = time.replace('.dat','')
+        REPS.append(rep)
+        # TIMES.append(time)
+
+    REPS = sorted(list(set(REPS)), key=float)
+    REPS = [x for x in REPS if int(x) > low_cutoff]
+    REPS = [x for x in REPS if int(x) < high_cutoff]
+    # TIMES = list(set(TIMES))
+    # OFFS = [item for item in TIMES if "-10us" in item]
+    # ONS = [item for item in TIMES if "-10us" not in item]
+
+    # tup =  [parse.unit_sort(item) for item in ONS]
+    # tup_sort = sorted(tup, key=lambda item: (item[0],parse.natural_keys(item[1])))
+    # clean_ons = [item[1] for item in tup_sort]
+    # on_off_map = {k:v for k,v in (zip(clean_ons,sorted(OFFS, key=parse.alphanum_key)))}
+
+    return parent, samp, REPS,file_map
+
 def static_map(samp_dir, buffer_d=None, low_cutoff=0, high_cutoff=1000):
     samp_dir = pathlib.Path(samp_dir)
-    samp_files = list(samp_dir.glob(pattern='*.tpkl'))
-    # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
+    samp_files = list(samp_dir.glob(pattern='*.dat'))
+    # buffer_files = list(buff.glob(pattern='**/*.dat'))
     # t0 = clock()
     # sample_map = []
     REPS = []
     TEMPS = []
     SERIES = []
+    FILE_NUMBERS = []
     # TIMES = []
     if buffer_d:
         samp_files = [file for file in samp_files if "BT" in file.name]
@@ -144,15 +195,16 @@ def static_map(samp_dir, buffer_d=None, low_cutoff=0, high_cutoff=1000):
             # print(temp)
         else:
             print(info+"failed")
-        rep = rep.replace(".tpkl","")
+        rep = rep.replace(".dat","")
         # on_data = parse.parse(str(file))
         # on_data.scale(reference)
         # sample_map.append((samp,dilution,temp,on_data))
 
-        # time = time.replace('.tpkl','')
+        # time = time.replace('.dat','')
         REPS.append(rep)
         SERIES.append(dilution)
         TEMPS.append(temp)
+        FILE_NUMBERS.append(file_number)
         # TIMES.append(time)
 
     REPS = sorted(list(set(REPS)), key=float)
@@ -221,15 +273,15 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
             for n in reps:
                 for on, off in on_off_map.items():
 
-                    # on_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, on))
-                    on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, on))
+                    # on_string = ("{0}/{1}_{2}_{3}_on.dat".format(parent, samp, n, on))
+                    on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.dat".format(parent, samp, iteration, temp, n, on))
                     # if option:
-                    #     on_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, on))
+                    #     on_string = ("{0}/{1}_{2}_{3}_on.dat".format(parent, samp, n, on))
                     # else:
-                    #     on_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, on))
+                    #     on_string = ("{0}/{1}_{2}_{3}.dat".format(parent, samp, n, on))
 
                     # if multitemp:
-                    #     on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, on))
+                    #     on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.dat".format(parent, samp, iteration, temp, n, on))
                     try:
                         on_data = parse.parse(on_string)
                         
@@ -238,15 +290,15 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
                         print(on_string+"\tfailed")
                         pass
 
-                    # off_string = ("{0}/{1}_{2}_{3}_off.tpkl".format(parent, samp, n, off))
-                    off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, off))
+                    # off_string = ("{0}/{1}_{2}_{3}_off.dat".format(parent, samp, n, off))
+                    off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.dat".format(parent, samp, iteration, temp, n, off))
                     # if option:
-                    #     off_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, off))
+                    #     off_string = ("{0}/{1}_{2}_{3}_on.dat".format(parent, samp, n, off))
                     # else:
-                    #     off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
+                    #     off_string = ("{0}/{1}_{2}_{3}.dat".format(parent, samp, n, off))
                     
                     # if multitemp:
-                    #     off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, off))
+                    #     off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.dat".format(parent, samp, iteration, temp, n, off))
                     
                     try:
                         off_data = parse.parse(off_string)
@@ -270,11 +322,11 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
                 off_data = None
 
                 if option:
-                    on_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, on))
-                    off_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, off))
+                    on_string = ("{0}/{1}_{2}_{3}_on.dat".format(parent, samp, n, on))
+                    off_string = ("{0}/{1}_{2}_{3}_on.dat".format(parent, samp, n, off))
                 else:
-                    on_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, on))
-                    off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
+                    on_string = ("{0}/{1}_{2}_{3}.dat".format(parent, samp, filenumber, on, n))
+                    off_string = ("{0}/{1}_{2}_{3}.dat".format(parent, samp, filenumber, off, n))
 
                 try:
                     on_data = parse.parse(on_string)
@@ -311,7 +363,7 @@ def static_traces(parent, samp, reps, temps, series, option=None):
         for dilution in series:
             static = []
             for n in reps:
-                static_string = ("{0}/{1}_off{2}T{3}_{4}.tpkl".format(parent, samp, dilution, temp, n))
+                static_string = ("{0}/{1}_off{2}T{3}_{4}.dat".format(parent, samp, dilution, temp, n))
                 # print(static_string)
 
                 try:
@@ -345,7 +397,7 @@ def all_off_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, 
             for n in reps:
                 for off in on_off_map.values():
 
-                    off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, off))
+                    off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.dat".format(parent, samp, iteration, temp, n, off))
                     try:
                         off_data = parse.parse(off_string)
                         off_data.scale(reference, qmin=QMIN, qmax=QMAX)
@@ -358,11 +410,11 @@ def all_off_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, 
         for n in reps:
                     for off in on_off_map.values():
 
-                        # off_string = ("{0}/{1}_{2}_{3}_off.tpkl".format(parent, samp, n, off))
+                        # off_string = ("{0}/{1}_{2}_{3}_off.dat".format(parent, samp, n, off))
                         if option:
-                            off_string = ("{0}/{1}_{2}_{3}_on.tpkl".format(parent, samp, n, off))
+                            off_string = ("{0}/{1}_{2}_{3}_on.dat".format(parent, samp, n, off))
                         else:
-                            off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
+                            off_string = ("{0}/{1}_{2}_{3}.dat".format(parent, samp, n, off))
                         try:
                             off_data = parse.parse(off_string)
                             off_data.scale(reference, qmin=QMIN, qmax=QMAX)
@@ -373,7 +425,7 @@ def all_off_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, 
 
     return off_vectors
 
-def all_vectors(parent, samp, reps, on_off_map, option=None, multitemp=None, iterations=None, temp=None):
+def all_vectors(parent, samp, reps, file_number, option=None, multitemp=None, iterations=None, temp=None):
     
     all_vectors = []
     all_labels = []
@@ -386,8 +438,8 @@ def all_vectors(parent, samp, reps, on_off_map, option=None, multitemp=None, ite
             for n in reps:
                 # for off in on_off_map.values():
                 for on, off in on_off_map.items():
-                    on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, on))
-                    off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.tpkl".format(parent, samp, iteration, temp, n, off))
+                    on_string = ("{0}/{1}_{2}_{3}_{4}_{5}.dat".format(parent, samp, iteration, temp, n, on))
+                    off_string = ("{0}/{1}_{2}_{3}_{4}_{5}.dat".format(parent, samp, iteration, temp, n, off))
                     try:
                         on_data = parse.parse(on_string)
                         on_data = Trace(on_data.q, np.empty_like(on_data.q), np.empty_like(on_data.q), on_data.sigSA, on_data.SA, on_data.Nj)
@@ -410,38 +462,35 @@ def all_vectors(parent, samp, reps, on_off_map, option=None, multitemp=None, ite
 
 
                     except:
-                        print(off_string+"\tfailed")
+                        print(on_string+"\tfailed")
 
     else:
+        for file_numb, file_info in file_number.items():
+            on_string = ("{0}/{1}_{2}_{3}_{4}.dat".format(parent, samp, file_numb, file_info[0], file_info[1]))
+            # off_string = ("{0}/{1}_{2}_{3}.dat".format(parent, samp, file_number[2], file_number[2]))
+            try:
+                on_data = parse.parse(on_string)
+                on_data = Trace(on_data.q, np.empty_like(on_data.q), np.empty_like(on_data.q), on_data.sigSA, on_data.SA, on_data.Nj)
+                on_data.scale(reference, qmin=QMIN, qmax=QMAX)
 
-        for n in reps:
-            # for off in on_off_map.values():
-            for on, off in on_off_map.items():
-                on_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, on))
-                off_string = ("{0}/{1}_{2}_{3}.tpkl".format(parent, samp, n, off))
-                try:
-                    on_data = parse.parse(on_string)
-                    on_data = Trace(on_data.q, np.empty_like(on_data.q), np.empty_like(on_data.q), on_data.sigSA, on_data.SA, on_data.Nj)
-                    on_data.scale(reference, qmin=QMIN, qmax=QMAX)
-
-                    off_data = parse.parse(off_string)
-                    off_data = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.sigSA, off_data.SA, off_data.Nj)
-                    off_data.scale(reference, qmin=QMIN, qmax=QMAX)
-                    # off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
-                    # off_vectors.append(off_scaled)
-                    if on_data:
-                        if off_data:
-                            all_vectors.append(off_data.SA[reference.q>0.03])
-                            all_labels.append(off)
-                            all_vectors.append(on_data.SA[reference.q>0.03])
-                            all_labels.append(on)
-                            # sub_scaled = subtract_scaled_traces(on_data,off_data)
-                            sub_scaled = on_data.subtract(off_data, scaled=True)
-                            tr_vectors_labels.append((sub_scaled.SA[reference.q>0.03], on))
+                # off_data = parse.parse(off_string)
+                # off_data = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.sigSA, off_data.SA, off_data.Nj)
+                # off_data.scale(reference, qmin=QMIN, qmax=QMAX)
+                # off_scaled = Trace(off_data.q, np.empty_like(off_data.q), np.empty_like(off_data.q), off_data.scaled_sigSA, off_data.scaled_SA, off_data.Nj)
+                # off_vectors.append(off_scaled)
+                # if on_data:
+                    # if off_data:
+                    # all_vectors.append(off_data.SA[reference.q>0.03])
+                    # all_labels.append(off)
+                all_vectors.append(on_data.SA[reference.q>0.03])
+                all_labels.append(file_info[0])
+                # sub_scaled = subtract_scaled_traces(on_data,off_data)
+                # sub_scaled = on_data.subtract(off_data, scaled=True)
+                tr_vectors_labels.append((on_data.SA[reference.q>0.03], file_info[0]))
 
 
-                except:
-                    print(off_string+"\tfailed")
+            except:
+                print(on_string+"\tfailed")
 
 
     return all_vectors, all_labels, tr_vectors_labels
@@ -542,8 +591,10 @@ parser.add_argument('-el', '--exclude_repeats_low', help='Choose repeats at the 
 parser.add_argument('-eh', '--exclude_repeats_high', help='Choose repeats at the end of a dataset to exclude based on slow radiation damage effects', type=int, default=10000)
 args = parser.parse_args()
 
-reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
-# reference = parse.parse("/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.tpkl")
+reference = parse.parse("/Volumes/LaCie/analysis/data/common/integration/Trap/Trap-Apo-Buffer-1/xray_images/Trap-Apo-Buffer-1_1132_749us_21.dat")
+
+# reference = parse.parse("/Volumes/beryllium/saxs_waxs_tjump/cypa/APS_20170302/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.dat")
+# reference = parse.parse("/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-1/xray_images/CypA-WT-1_9_4.22us.dat")
 if args.reference:
     reference = parse.parse(args.reference)
 else:
@@ -554,7 +605,8 @@ else:
 t_shortlist = ["-10.1us", "1us", "10us", "100us", "1ms"]
 # t_shortlist = ["562ns"]
 # t_shortlist = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us"]
-TIMES = [ "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us", "316us", "422us", "562us"]
+# TIMES = [ "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us", "316us", "422us", "562us"]
+TIMES = [ "562ns", "749ns", "0.999us", "1.33us", "1.78us", "2.37us", "3.16us", "4.21us", "5.62us", "7.49us", "9.99us", "13.3us", "17.8us", "23.7us", "31.6us", "42.1us", "56.2us", "74.9us", "99.9us", "133us", "178us", "237us", "316us", "749us"]
 temp='3C'
 
 ################################################################################
@@ -703,21 +755,21 @@ elif args.svd:
         full_labels = [item[1] for item in tr_vectors_labels['3C']]
     
     else:
-        parent, samp, reps, on_off_map = sample_map(args.sample_directory, low_cutoff=args.exclude_repeats_low, high_cutoff=args.exclude_repeats_high)
-        multi_all_vectors, multi_all_labels, tr_vectors_labels = all_vectors(parent, samp, reps, on_off_map, multitemp=args.multitemp)
+        parent, samp, reps, file_map = new_map(args.sample_directory, low_cutoff=args.exclude_repeats_low, high_cutoff=args.exclude_repeats_high)
+        multi_all_vectors, multi_all_labels, tr_vectors_labels = all_vectors(parent, samp, reps, file_map, multitemp=args.multitemp)
         full_list = [item[0] for item in tr_vectors_labels]
         full_labels = [item[1] for item in tr_vectors_labels]
 
     # print(full_list)
-    fig0, ax0 = plt.subplots()
-    all_curves = [list(zip(reference.q[reference.q>0.03],item)) for item in full_list]
-    # print(all_curves[0])
-    line_segments = LineCollection(all_curves,color="green",lw=0.5)
-    ax0.add_collection(line_segments)
-    ax0.plot()
-    # ax0.scatter(reference.q,full_list)
-    fig0.savefig("scaled_radavgs.png", dpi=300)
-    plt.show(block=False)
+    # fig0, ax0 = plt.subplots()
+    # all_curves = [list(zip(reference.q[reference.q>0.03],item)) for item in full_list]
+    # # print(all_curves[0])
+    # line_segments = LineCollection(all_curves,color="green",lw=0.5)
+    # ax0.add_collection(line_segments)
+    # ax0.plot()
+    # # ax0.scatter(reference.q,full_list)
+    # fig0.savefig("scaled_radavgs.png", dpi=300)
+    # plt.show(block=False)
 
 
     u,s,v = svd(full_list, full_matrices=False)

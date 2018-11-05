@@ -9,7 +9,10 @@ from trace import Trace
 from pandas import read_table,DataFrame
 import numpy as np
 import re
-# from table import table
+
+import sys
+if sys.version_info[0] < 3:
+    from table import table
 
 
 
@@ -18,7 +21,7 @@ def parse(filename):
     tpkl. Just passes through to the appropriate place based on the `mode` 
     variable."""
     if filename.endswith("tpkl"):
-        return parse_tpkl_2(filename)
+        return parse_tpkl_depreciated(filename)
     elif filename.endswith("dat"):
         return parse_dat(filename)
     else:
@@ -46,7 +49,7 @@ dt = np.dtype({'names': ['q','S','sigS','SA','sigSA','Nj'],
 def parse_tpkl_2(filename):
     """Loads tpkl files and generates a corresponding Trace object.
     """
-    TPKL_HEADER_BYTES = 279 ### this value could vary...original value
+    # TPKL_HEADER_BYTES = 279 ### this value could vary...original value
     # TPKL_HEADER_BYTES = 290 ### march 2018
     with open(filename, "rb") as f:
         f.seek(TPKL_HEADER_BYTES)
