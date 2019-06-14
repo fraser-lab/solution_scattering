@@ -16,7 +16,9 @@ from numpy.linalg import svd
 import scipy.stats.mstats
 
 import parse
-
+######################################
+# Constants that may relate to geometry or dataset issues.
+######################################
 QMIN = 0.03
 QMAX = 4.28
 SKIP_INDEX = 30
@@ -25,64 +27,71 @@ OUTLIER_CUTOFF = 2.5
 def make_dir(f):
     if not os.path.exists(f):
         os.makedirs(f)
-#"-10.1us",
-TIMES = [ "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", "133us", "178us", "237us", "316us", "422us", "562us", "750us", "1ms"]
+
+
+######################################
+# Dataset information for loading in data
+######################################
+
+TIMES = [ "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", 
+	"7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us", 
+	"133us", "178us", "237us", "316us", "422us", "562us", "750us", "1ms"]
 REPS = range(0,50)
 
 PREFIX_LIST = ["CypA-WT-1",
-							 "CypA-WT-Buffer-1",
-							 "CypA-S99T-2",
-							 "CypA-S99T-Buffer-2",
-							 "CypA-1",
-							 "CypA-Buffer-1",
-							 "CypA-2", 
-							 "CypA-Buffer-2",
-							 "CypA-3", 
-							 "CypA-Buffer-3",
-							 "CypA-4", 
-							 "CypA-Buffer-4",
-							 "CypA-5", 
-							 "CypA-Buffer-5",
-							 "CypA-WT-1",
-							 "CypA-WT-Buffer-1",
-							 "CypA-WT-2",
-							 "CypA-WT-Buffer-2",
-							 "CypA-WT-3",
-							 "CypA-WT-Buffer-3",
-							 "CypA-WT-4",
-							 "CypA-WT-Buffer-4",
-							 "CypA-NH-1",
-							 "CypA-NH-Buffer-1",
-							 "CypA-H-1",
-							 "CypA-N-1",
-								]
+				 "CypA-WT-Buffer-1",
+				 "CypA-S99T-2",
+				 "CypA-S99T-Buffer-2",
+				 "CypA-1",
+				 "CypA-Buffer-1",
+				 "CypA-2", 
+				 "CypA-Buffer-2",
+				 "CypA-3", 
+				 "CypA-Buffer-3",
+				 "CypA-4", 
+				 "CypA-Buffer-4",
+				 "CypA-5", 
+				 "CypA-Buffer-5",
+				 "CypA-WT-1",
+				 "CypA-WT-Buffer-1",
+				 "CypA-WT-2",
+				 "CypA-WT-Buffer-2",
+				 "CypA-WT-3",
+				 "CypA-WT-Buffer-3",
+				 "CypA-WT-4",
+				 "CypA-WT-Buffer-4",
+				 "CypA-NH-1",
+				 "CypA-NH-Buffer-1",
+				 "CypA-H-1",
+				 "CypA-N-1"]
 
 directories = ["/Volumes/DatumsDepot/2016/Mike/APS_20160701/July_Beamline_Trip/Analysis/common/integration/CypA-WT/CypA-WT-1/xray_images",
-							 "/Volumes/DatumsDepot/2016/Mike/APS_20160701/July_Beamline_Trip/Analysis/common/integration/CypA-WT/CypA-WT-Buffer-1/xray_images",
-							 "/Volumes/DatumsDepot/2016/Mike/APS_20160701/July_Beamline_Trip/Analysis/common/integration/CypA-S99T/CypA-S99T-2/xray_images",
-							 "/Volumes/DatumsDepot/2016/Mike/APS_20160701/July_Beamline_Trip/Analysis/common/integration/CypA-S99T/CypA-S99T-Buffer-2/xray_images",
-							 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-1/xray_images",
-							 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-1/xray_images",
-							 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-2/xray_images",
-							 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-2/xray_images",
-							 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-3/xray_images",
-							 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-3/xray_images",
-							 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-4/xray_images",
-							 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-4/xray_images",
-							 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-5/xray_images",
-							 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-5/xray_images",
-							 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-1/xray_images",
-							 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-Buffer-1/xray_images",
-							 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-2/xray_images",
-							 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-Buffer-2/xray_images",
-							 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-3/xray_images",
-							 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-Buffer-3/xray_images",
-							 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-4/xray_images",
-							 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-Buffer-4/xray_images",
-							 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-NH-1/xray_images",
-							 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-NH-Buffer-1/xray_images",
-							 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-H-1/xray_images",
-							 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-N-1/xray_images"]
+			 "/Volumes/DatumsDepot/2016/Mike/APS_20160701/July_Beamline_Trip/Analysis/common/integration/CypA-WT/CypA-WT-Buffer-1/xray_images",
+			 "/Volumes/DatumsDepot/2016/Mike/APS_20160701/July_Beamline_Trip/Analysis/common/integration/CypA-S99T/CypA-S99T-2/xray_images",
+			 "/Volumes/DatumsDepot/2016/Mike/APS_20160701/July_Beamline_Trip/Analysis/common/integration/CypA-S99T/CypA-S99T-Buffer-2/xray_images",
+			 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-1/xray_images",
+			 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-1/xray_images",
+			 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-2/xray_images",
+			 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-2/xray_images",
+			 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-3/xray_images",
+			 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-3/xray_images",
+			 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-4/xray_images",
+			 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-4/xray_images",
+			 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-5/xray_images",
+			 "/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-5/xray_images",
+			 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-1/xray_images",
+			 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-Buffer-1/xray_images",
+			 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-2/xray_images",
+			 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-Buffer-2/xray_images",
+			 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-3/xray_images",
+			 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-Buffer-3/xray_images",
+			 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-4/xray_images",
+			 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-WT-Buffer-4/xray_images",
+			 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-NH-1/xray_images",
+			 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-NH-Buffer-1/xray_images",
+			 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-H-1/xray_images",
+			 "/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WAXS/common/integration/CypA/CypA-N-1/xray_images"]
+
 # PREFIX_LIST = [
 # 							 "CypA-WT-1",
 #  							 "CypA-WT-Buffer-1",
@@ -95,7 +104,7 @@ directories = ["/Volumes/DatumsDepot/2016/Mike/APS_20160701/July_Beamline_Trip/A
 
 
 ######################################
-# Parse, Load, Scale Data
+# Load reference
 ######################################
 
 length = 0
@@ -107,6 +116,7 @@ reference = parse.parse("/Volumes/DatumsDepot/2017/Mike/APS_20170302/Analysis/WA
 Dataset = namedtuple('Dataset', ['directory', 'onavg', 'onstd', 'offavg', 'offstd'])
 datasets = []
 
+## Iterate the whole process over each directory.
 for directory_index, directory in enumerate(directories):
 	all_vectors = []
 	subtracted_vectors = {i: [] for i in TIMES}	
@@ -137,12 +147,9 @@ for directory_index, directory in enumerate(directories):
 			shutil.copy(src,dst)
 
 
-
-
-	# files = listdir(directory)
-	# for index, _ in enumerate()
-	# print length
-	# for megarep in range(MEGAREPS):
+	######################################
+	# Parse, Load, Scale Data
+	######################################
 	print "Loading Data"
 	for i in REPS: 
 		for index, time in enumerate(TIMES):
