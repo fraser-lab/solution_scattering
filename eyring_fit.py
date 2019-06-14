@@ -1,4 +1,4 @@
-# Python2 script for calculatng enthalpies (DH) and entropies of activation (DS) using the linear Eyring equation
+# Python2 script for calculatng enthalpies (DH) and entropies (DS) of activation using the linear Eyring equation
 #
 # This script will perform the analysis for a single process, or for two processes simultaneously if commented lines are un-commented
 #
