@@ -1,8 +1,16 @@
+"""
+Using tempurature standards and SVD of the water ring, 
+calculate the average temperature of the on and off at each 
+timepoint in a t-jump series.
+
+Requires Parse and Trace
+"""
+
 import csv
 import math
 from os import listdir
-from sys import argv
 import subprocess
+from sys import argv
 
 #import matplotlib
 #matplotlib.use("MacOSX")
@@ -10,35 +18,41 @@ from matplotlib import pyplot as plt
 import numpy as np
 from numpy.linalg import svd
 
+from parse import parse, alg_scale
 
-"""Statics"""
+##############################################
+# Statics Information
+##############################################
 #TEMPS = ["5C", "14C", "-5C", "0C", "10C", "13C", "3C", "8C", "18C"]
-TIMES = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", "7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us",  "133us", "178us", "237us", "316us", "422us", "562us", "750us", "1ms"] # 
+TIMES = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16us", "4.22us", "5.62us", 
+	"7.5us", "10us", "13.3us", "17.8us", "23.7us", "31.6us", "42.2us", "56.2us", "75us", "100us",  "133us", 
+	"178us", "237us", "316us", "422us", "562us", "750us", "1ms"] # 
 # TIMES = ["-10.1us", "562ns", "1us", "1.78us", "3.16us", "5.62us", "10us", "17.8us", "31.6us", "56.2us", "100us", "178us", "316us", "562us", "1ms"]
 STATIC_REPS = range(32)
 STATIC_TEMPS = [3, 8, 13, 18, 23, 28] 
 # STATIC_TEMPS = [14,21,28]
+
+##############################################
+# Time Resolved Information
+##############################################
 REPS = range(5,40)
-# PREFIX = "CypA-6"
-# PREFIX = "CypA-5"
-TR_DIRECTORIES = ["/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-1/xray_images/", "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-2/xray_images/", "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-3/xray_images/", "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-4/xray_images/", "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-NH-1/xray_images/"]
+
+TR_DIRECTORIES = ["/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-1/xray_images/", 
+	"/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-2/xray_images/", 
+	"/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-3/xray_images/", 
+	"/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-4/xray_images/", 
+	"/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-NH-1/xray_images/"]
 TR_PREFIXES = ["CypA-WT-1", "CypA-WT-2", "CypA-WT-3", "CypA-WT-4", "CypA-NH-1"]
-#TR_DIRECTORIES = ["/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-1/xray_images/", "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-2/xray_images/", "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-3/xray_images/", "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-4/xray_images/", "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-NH-1/xray_images/", "/mnt/d/T-jump_CypA_best/July2016/Analysis/common/integration/CypA-S99T-2/xray_images/", "/mnt/d/T-jump_CypA_best/November2016/Analysis/WAXS/common/integration/CypA/CypA-1/xray_images/", "/mnt/d/T-jump_CypA_best/November2016/Analysis/WAXS/common/integration/CypA/CypA-2/xray_images/", "/mnt/d/T-jump_CypA_best/November2016/Analysis/WAXS/common/integration/CypA/CypA-3/xray_images/", "/mnt/d/T-jump_CypA_best/November2016/Analysis/WAXS/common/integration/CypA/CypA-4/xray_images/", "/mnt/d/T-jump_CypA_best/November2016/Analysis/WAXS/common/integration/CypA/CypA-5/xray_images/"] 
-#TR_PREFIXES = ["CypA-WT-1", "CypA-WT-2", "CypA-WT-3", "CypA-WT-4", "CypA-NH-1", "CypA-S99T-2", "CypA-1", "CypA-2", "CypA-3", "CypA-4", "CypA-5"]
-#TR_DIRECTORIES = ["/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-1/xray_images/", "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-2/xray_images/", "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-3/xray_images/", "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-4/xray_images/", "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-NH-1/xray_images/", "/mnt/d/T-jump_CypA_best/July2016/Analysis/common/integration/CypA-S99T-2/xray_images/", "/mnt/d/T-jump_CypA_best/November2016/Analysis/WAXS/common/integration/CypA/CypA-1/xray_images/", "/mnt/d/T-jump_CypA_best/November2016/Analysis/WAXS/common/integration/CypA/CypA-2/xray_images/", "/mnt/d/T-jump_CypA_best/November2016/Analysis/WAXS/common/integration/CypA/CypA-4/xray_images/", "/mnt/d/T-jump_CypA_best/November2016/Analysis/WAXS/common/integration/CypA/CypA-5/xray_images/"] 
-#TR_PREFIXES = ["CypA-WT-1", "CypA-WT-2", "CypA-WT-3", "CypA-WT-4", "CypA-NH-1", "CypA-S99T-2", "CypA-1", "CypA-2", "CypA-4", "CypA-5"]
-# TR_DIRECTORIES = ["/Volumes/DatumsDepot/2016/Mike/APS_20161110/Analysis/WAXS/common/integration/CypA/CypA-Buffer-1/xray_images"]
-# TR_PREFIXES = ["CypA-Buffer-1"]
+
 assert len(TR_PREFIXES) == len(TR_DIRECTORIES)
-# PREFIX = "CypA-WT-Buffer-1"
 STATIC_PREFIX = "CypA-WT-static-1_offPC0T"
-# STATIC_PREFIX = "CypA-WT-static-1_offBT"
-from parse import parse_tpkl, alg_scale
+
+
+
+
 
 length = 0
 static_directory = "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-static-1/xray_images/"
-# tr_directories = argv[2:]
-# DIRECTORY_PREFIX = "/Volumes/DatumsDepot/2016/mike/APS_20161110/Analysis/WAXS/common/integration/CypA/"
 
 
 # fig,ax = plt.subplots()
@@ -46,10 +60,16 @@ static_directory = "/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integ
 vectors = []
 subtracted_vectors = []	
 
-reference = parse_tpkl("/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-static-1/xray_images/CypA-WT-static-1_offPC0T13_20.tpkl")
+##############################################
+# Reference dataset is used to scale all data 
+##############################################
+reference = parse("/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integration/CypA/CypA-WT-static-1/xray_images/CypA-WT-static-1_offPC0T13_20.tpkl")
 
 
-
+##############################################
+# Load and scale all static temperature data
+# Goes through each temp and loads them all in turn.
+##############################################
 for index, temp in enumerate(STATIC_TEMPS):
 	for i in STATIC_REPS:
 		static_string = "{0}/{1}{2}_{3}.tpkl".format(static_directory, STATIC_PREFIX, temp, i+1)
@@ -57,41 +77,47 @@ for index, temp in enumerate(STATIC_TEMPS):
 		static_scaled = alg_scale(reference, static)[0]
 		vectors.append((static_scaled, static_string))
 
+
+
+############################################## 
+# Load and scale all t-jump data.
+# Store the number you load in for each time-resolved dataset because it is variable (outliers removed)
+# Iteration: Dataset (usually temp or mutant variant), then repeat iwthin that dataset, then 
+# Load and algebraically scale on and off separately for each time in each rep, and store both.
+##############################################
 lengths = []
-for index,_ in enumerate(TR_DIRECTORIES):
-	tr_directory = TR_DIRECTORIES[index]
-	PREFIX = TR_PREFIXES[index]
+for ind,tr_directory in enumerate(TR_DIRECTORIES):
+	PREFIX = TR_PREFIXES[ind]
 	length = 0
 	for i in REPS:
 		#for temp in TEMPS:
 			for index, time in enumerate(TIMES):
 				try: 
 					on_string = "{0}/{1}_{2}_{3}.tpkl".format(tr_directory, PREFIX, i+1, time)
-					on = parse_tpkl(on_string)
+					on = parse(on_string)
 					on_scaled = alg_scale(reference, on)[0]
-					# on_scaled = on.as_vector()
 					if index > 0:
 							off_count = "-{}".format(index+1)
 					else:
 							off_count = ""
 					off_string = "{0}/{1}_{2}_-10us{3}.tpkl".format(tr_directory, PREFIX, i+1, off_count)
-					off = parse_tpkl(off_string)
+					off = parse(off_string)
 					off_scaled = alg_scale(reference, off)[0]
 					vectors.append((off_scaled, off_string, on_string))
 					vectors.append((on_scaled, off_string, on_string))
 					length += 2
 				except:
+					"""On some of our old datasets, we had a different file naming convention,  so we check here"""
 					try: 
 						on_string = "{0}/{1}_{2}_{3}_on.tpkl".format(tr_directory, PREFIX, i+1, time)
-						on = parse_tpkl(on_string)
+						on = parse(on_string)
 						on_scaled = alg_scale(reference, on)[0]
-						# on_scaled = on.as_vector()
 						if index > 0:
 								off_count = "-{}".format(index+1)
 						else:
 								off_count = ""
 						off_string = "{0}/{1}_{2}_-10us{3}_on.tpkl".format(tr_directory, PREFIX, i+1, off_count)
-						off = parse_tpkl(off_string)
+						off = parse(off_string)
 						off_scaled = alg_scale(reference, off)[0]
 						vectors.append((off_scaled, off_string, on_string))
 						vectors.append((on_scaled, off_string, on_string))
@@ -101,10 +127,15 @@ for index,_ in enumerate(TR_DIRECTORIES):
 						print "one or both of the on/off pairs was tossed:"
 						print "{0}/{1}_{2}_{3}.tpkl".format(tr_directory, PREFIX, i+1, time)
 	lengths.append(length)
-			
+
+
 print lengths
-q = on.q
-length = len(q)
+##############################################
+## The code below can break if data is included from multiple trips, since 
+## different experiment geometries can change the number of Q bins.
+##############################################
+q = on.q 
+length = len(q) 
 
 
 
@@ -113,14 +144,15 @@ for k in vectors[0:3]:
 	print k
 	print k[0]
 	print k[0][1]
+##############################################
+# SVD with Q Scaling
+##############################################
 matrix = np.matrix([[q[j]*k[0][j] for j in range(20,length-700)] for k in vectors]).transpose()
-# matrix = np.matrix(subtracted_vectors).transpose()
+
 
 u,s,v = svd(matrix, full_matrices=False)
 
-
 sum_var = np.sum([i**2 for i in s])
-
 print "Variance captured" 
 print [(i**2)/sum_var for i in s][0:10]
 
@@ -133,6 +165,9 @@ print [(i**2)/sum_var for i in s][0:10]
 
 # print v.slice(0)
 
+##############################################
+# Plot right singular vectors to show how they differ per snapshot, and save them out to a csv.
+##############################################
 fig, ax = plt.subplots()
 ax.axvspan(0,29.5,color="0.9", alpha=0.5, linewidth=0)
 with open("timepoints.csv", "wb") as csv_output:
@@ -157,7 +192,9 @@ fig.savefig("timepoints.png")
 fig2, ax2 = plt.subplots()
 
 
-
+##############################################
+#Plot left singular vectors to show their shapes, and save them out to a csv.
+##############################################
 with open("singular_vectors.csv", "wb") as csv_output:
 	q_dat = q[20:-700]
 	data_struct =u.transpose().tolist()[:8] 
@@ -202,13 +239,17 @@ fig2.savefig("Singular_vectors_WT_HD_Unscaled.png")
 # 			print vectors[index][2]
 
 
-	
+##############################################
+# Plot singular values to show variance accounted for by each vector.
+##############################################	
 fig3, ax3= plt.subplots()
 ax3.plot([np.log(i) for i in s][0:10], "-")
 fig3.savefig("Singular_values_WT_HD_Unscaled.png")
 
 
-
+##############################################
+#Separate out the 2nd right singular vector data by temperature and plot as a function of temoperature.
+##############################################
 fig4,ax4 = plt.subplots()
 x = STATIC_TEMPS
 y = []
@@ -220,17 +261,28 @@ for index, temp in enumerate(STATIC_TEMPS):
 	y_weight.append(1/std_value)
 ax4.plot(x,y, ".")
 
-
+##############################################
+# Fit a quadratic curve to the v vs T data to generate a standard curve for temperature calculation. 
+##############################################
 m,n,b = np.polyfit(x,y,2, w=y_weight)
 print m, n, b
 
 ax4.plot(x, [m*i**2+n*i+b for i in x], ls="--")
 
+
+##############################################
+# Also calculate a linaer fit, but that doesn't fit nearly as well.
+##############################################
 m1, b1 = np.polyfit(x,y,1)
 print m1, b1
+ax4.plot(x,[m1*i+b1 for i in x])
+
+fig4.savefig("temperature_fits.png")
 
 
-
+##############################################
+# Save out standard curve information to a csv
+##############################################
 with open("temperature_fits.csv", "wb") as csv_output:
 	wr = csv.writer(csv_output)
 	wr.writerow(["Temp", "Measured", "Quadratic Estimate", "Linear Estimate"])
@@ -240,11 +292,9 @@ with open("temperature_fits.csv", "wb") as csv_output:
 
 
 
-ax4.plot(x,[m1*i+b1 for i in x])
-fig4.savefig("temperature_fits.png")
-
-
-
+##############################################
+# Convert time strings to values usable for plotting.
+##############################################
 times_numeric = []
 for time in TIMES:
   number = float(time[:-2])
@@ -260,6 +310,13 @@ for time in TIMES:
 
 fig5,ax5 = plt.subplots()
 
+
+##############################################
+# Iterate through datasets and times and average the ons and offs separately, 
+# then calculate temperatures for each based on the SVD quadratic fit.
+#
+# Plot delta temperatures as a function of time delay for each experiment.
+##############################################
 starting_time = 0
 for experiment, _ in enumerate(TR_DIRECTORIES):
 	print TR_DIRECTORIES[experiment]
