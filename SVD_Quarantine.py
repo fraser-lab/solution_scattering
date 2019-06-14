@@ -1,3 +1,8 @@
+"""
+Use SVD with chi-squared analysis to iteratively identify and remove outliers from datasets.
+In the time-resolved data, outliers frequently come from variances in x-ray and laser intensity,
+as well as from timing errors (I don't think we have any of those in this data though).
+"""
 from collections import namedtuple
 from os import listdir, makedirs, path
 import os
