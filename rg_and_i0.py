@@ -49,10 +49,9 @@ for file in samp_files:
 	slope = popt[0]
 	I_0_error = np.sqrt(pcov[1][1])
 	I_0_error_scaled = I_0 * I_0_error
-	MW = 18500
 	Rg = np.sqrt(3 * slope)
 	Rg_error = np.sqrt(pcov[0][0])
-	Rg_error_scaled = 0.5 * Rg * ((3 * Rg_error) / (3 * abs(slope)))
+	Rg_error_scaled = 0.5 * Rg * ( Rg_error / abs(slope) )
 
 	print(name)
 	print("Rg  = {:.2f}    +/-   {:.2f}".format(Rg,Rg_error_scaled))
