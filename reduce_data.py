@@ -1,5 +1,13 @@
-### use python 3 error
+"""
+Reduce data provides a library of functions for data management, followed
+by methods for data analysis.
 
+Author(s):
+Benjamin A. Barad
+Alexander M. Wolff
+"""
+
+### use python 3 error
 import sys
 if sys.version_info[0] < 3:
     print("\nException: Please use Python 3")
@@ -32,6 +40,22 @@ CHI_OUTLIER = 1.5
 
 
 def sample_map_multitemp(samp_dir, multitemp=None, low_cutoff=0, high_cutoff=1000):
+    """
+    A function used for organizing data within a single directory.
+    It is assumed that specific sample parameters are stored within
+    the filenames within the supplied directory. The on_off_map allows
+    for matched subtraction of on-off pairs.
+    
+    Parameters:
+    samp_dir (str): path locating data to be analyzed
+    multitemp (T/F): are multiple temperatures within a single directory? (default None)
+    low_cutoff (int): drop from 1 to low_cutoff repetitions from analysis (default 0)
+    high_cutoff (int): drop from high_cutoff to last repetition from analysis (default 0)
+    
+    Returns:
+    Directory (pathlib object), Sample (str), Iterations (list of strings), Temps (list of strings),
+    Reps (list of strings), on_off_map (dictionary)
+    """
     samp_dir = pathlib.Path(samp_dir)
     samp_files = list(samp_dir.glob(pattern='*/*.tpkl'))
     # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
@@ -79,6 +103,20 @@ def sample_map_multitemp(samp_dir, multitemp=None, low_cutoff=0, high_cutoff=100
     return parent, samp, ITERATIONS, TEMPS, REPS, on_off_map
 
 def sample_map(file_dir, low_cutoff=0, high_cutoff=1000):
+    """
+    A function used for organizing data within a single directory.
+    It is assumed that specific sample parameters are stored within
+    the filenames within the supplied directory. The on_off_map allows
+    for matched subtraction of on-off pairs.
+    
+    Parameters:
+    samp_dir (str): path locating data to be analyzed
+    low_cutoff (int): drop from 1 to low_cutoff repetitions from analysis (default 0)
+    high_cutoff (int): drop from high_cutoff to last repetition from analysis (default 0)
+    
+    Returns:
+    Directory (pathlib object), Sample (str), Reps (list of strings), on_off_map (dictionary)
+    """
     file_dir = pathlib.Path(file_dir)
     files = list(file_dir.glob(pattern='*.tpkl'))
     # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
@@ -117,6 +155,22 @@ def sample_map(file_dir, low_cutoff=0, high_cutoff=1000):
     return parent, samp, REPS, on_off_map
 
 def static_map(samp_dir, buffer_d=None, low_cutoff=0, high_cutoff=1000):
+    """
+    A function used for organizing static data within a single directory.
+    It is assumed that specific sample parameters are stored within
+    the filenames within the supplied directory. Differs from dynamic
+    map functions by tracking dilution factor, returned as Series.
+    
+    Parameters:
+    samp_dir (str): path locating data to be analyzed
+    buffer_d (T/F): are static buffer files in the same directory? (default F)
+    low_cutoff (int): drop from 1 to low_cutoff repetitions from analysis (default 0)
+    high_cutoff (int): drop from high_cutoff to last repetition from analysis (default 0)
+    
+    Returns:
+    Directory (pathlib object), Sample (str), Reps (list of strings), 
+    Temps (list of strings), Series(list of strings)
+    """
     samp_dir = pathlib.Path(samp_dir)
     samp_files = list(samp_dir.glob(pattern='*.tpkl'))
     # buffer_files = list(buff.glob(pattern='**/*.tpkl'))
