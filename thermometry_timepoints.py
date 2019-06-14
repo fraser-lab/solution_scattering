@@ -30,6 +30,8 @@ TIMES = ["-10.1us", "562ns", "750ns", "1us", "1.33us", "1.78us", "2.37us", "3.16
 # TIMES = ["-10.1us", "562ns", "1us", "1.78us", "3.16us", "5.62us", "10us", "17.8us", "31.6us", "56.2us", "100us", "178us", "316us", "562us", "1ms"]
 STATIC_REPS = range(32)
 STATIC_TEMPS = [3, 8, 13, 18, 23, 28] 
+STATIC_PREFIX = "CypA-WT-static-1_offPC0T"
+
 # STATIC_TEMPS = [14,21,28]
 
 ##############################################
@@ -45,7 +47,6 @@ TR_DIRECTORIES = ["/mnt/d/T-jump_CypA_best/March2017/Analysis/WAXS/common/integr
 TR_PREFIXES = ["CypA-WT-1", "CypA-WT-2", "CypA-WT-3", "CypA-WT-4", "CypA-NH-1"]
 
 assert len(TR_PREFIXES) == len(TR_DIRECTORIES)
-STATIC_PREFIX = "CypA-WT-static-1_offPC0T"
 
 
 
