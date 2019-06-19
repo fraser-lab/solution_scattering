@@ -231,12 +231,32 @@ def static_map(samp_dir, buffer_d=None, low_cutoff=0, high_cutoff=1000):
 
 
 def chi_stat(var, ref):
+    """
+    Calculates chi score between two Trace objects.
+    
+    Parameters:
+    var (Trace object): sample for comparison
+    ref (Trace object): reference sample
+    
+    Returns:
+    chi_squared (float)
+    """
     n = len(var.q)-1.0
     chi_squared = np.sum((var.SA-ref.SA)**2/(ref.sigSA**2))/n
     return chi_squared
 
 
 def chi_outliers(vectors, reference_vector):
+    """
+    Create a list of indices to filter vectors based on their chi score.
+    
+    Parameters:
+    vectors (list of Trace objects): list to be filtered
+    reference_vector (Trace object): reference sample
+    
+    Returns:
+    inliers (np.array)
+    """
     chi_scores = [chi_stat(i, reference_vector) for i in vectors]
     print("({}, {})".format(np.mean(chi_scores), np.std(chi_scores)))
     inliers = np.asarray(chi_scores) <= CHI_OUTLIER
@@ -245,6 +265,15 @@ def chi_outliers(vectors, reference_vector):
     return inliers
 
 def average_traces(traces):
+    """
+    Calculates the average scattering across a series of experiemental replicates.
+    
+    Parameters:
+    traces (list of Trace objects): list to be filtered
+    
+    Returns:
+    averaged_vector (Trace object)
+    """
     one_curve = traces[0]
     mean_SA = np.mean([trace.SA for trace in traces],axis=0)
     std_err = np.std([trace.SA for trace in traces],axis=0)
@@ -254,6 +283,17 @@ def average_traces(traces):
     return averaged_vector
 
 def iterative_chi_filter(vectors):
+    """
+    Filters vectors based on their chi score, when compared to the average of the set.
+    Filtering proceeds iteratively until the entire set is within the user-selected
+    cutoff.
+    
+    Parameters:
+    vectors (list of Trace objects): list to be filtered
+    
+    Returns:
+    clean_vectors (list of Trace objects)
+    """
     averaged_vector=average_traces(vectors)
     inliers = chi_outliers(vectors, averaged_vector)
     if False not in inliers:
