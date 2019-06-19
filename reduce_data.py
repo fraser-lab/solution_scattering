@@ -307,7 +307,22 @@ def iterative_chi_filter(vectors):
 
 
 def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, iterations=None, temp=None):
+    """
+    Scale on-off pairs, and then calculate difference curves.
     
+    Parameters:
+    parent (pathlib object): the directory where files are stored
+    samp (str): the name of the sample, as recorded in the filename
+    reps (list of strings): values denoting repetition number
+    on_off_map (dictionary): guide to on-off pairs
+    option (T/F): filename idiosynchroncy, "on" label included in filename for on-off pairs
+    multitemp (T/F): data storage idiosynchroncy, multiple temperatures collected in one run
+    iterations (T/F): data collection / storage idiosynchroncy
+    temp (list of strings): values denoting collection temperature
+    
+    Returns:
+    subtracted_vectors (list of Trace objects): difference curves
+    """
     subtracted_vectors = {i: [] for i in on_off_map.keys()}
     
     if multitemp:
@@ -397,6 +412,23 @@ def time_resolved_traces(parent, samp, reps, on_off_map, option=None, multitemp=
 
 
 def static_traces(parent, samp, reps, temps, series, option=None):
+    """
+    Average togther repetitions of static temperature data series.
+    First, curves are scaled to a user-chose reference curve.
+    Then, an iterative chi filter is used to remove outliers from the list.
+    Finally, an average is calcuated.
+    
+    Parameters:
+    parent (pathlib object): the directory where files are stored
+    samp (str): the name of the sample, as recorded in the filename
+    reps (list of strings): values denoting repetition number
+    temps (list of strings): values denoting temperature during data collection
+    series (list of strings): values denoting sample dilution factor
+    option (T/F): filename idiosynchroncy
+    
+    Returns:
+    static_vectors (list of Trace objects)
+    """
     
     static_vectors = {i: {j: [] for j in series} for i in temps}
 
@@ -430,6 +462,23 @@ def static_traces(parent, samp, reps, temps, series, option=None):
     return static_vectors
 
 def all_off_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, iterations=None, temp=None):
+    """
+    Collect all 'off' curves within a directory.
+    This is useful for calculating an average 'off' signal.
+    
+    Parameters:
+    parent (pathlib object): the directory where files are stored
+    samp (str): the name of the sample, as recorded in the filename
+    reps (list of strings): values denoting repetition number
+    on_off_map (dictionary): guide to on-off pairs
+    option (T/F): filename idiosynchroncy, "on" label included in filename for on-off pairs
+    multitemp (T/F): data storage idiosynchroncy, multiple temperatures collected in one run
+    iterations (T/F): data collection / storage idiosynchroncy
+    temp (list of strings): values denoting collection temperature
+    
+    Returns:
+    off_vectors (list of Trace objects)
+    """
     
     off_vectors = []
 
@@ -468,7 +517,26 @@ def all_off_traces(parent, samp, reps, on_off_map, option=None, multitemp=None, 
     return off_vectors
 
 def all_vectors(parent, samp, reps, on_off_map, option=None, multitemp=None, iterations=None, temp=None):
+    """
+    Collect all curves within a directory, selecting only on-off pairs,
+    and sorting into order of time-resolved data collection.
+    This is useful for SVD analysis.
     
+    Parameters:
+    parent (pathlib object): the directory where files are stored
+    samp (str): the name of the sample, as recorded in the filename
+    reps (list of strings): values denoting repetition number
+    on_off_map (dictionary): guide to on-off pairs
+    option (T/F): filename idiosynchroncy, "on" label included in filename for on-off pairs
+    multitemp (T/F): data storage idiosynchroncy, multiple temperatures collected in one run
+    iterations (T/F): data collection / storage idiosynchroncy
+    temp (list of strings): values denoting collection temperature
+    
+    Returns:
+    all_vectors (list of Trace objects)
+    all_labels (list of strings)
+    tr_vectors_labels (list of tuples containing (np.array, str))
+    """
     all_vectors = []
     all_labels = []
     tr_vectors_labels = []
