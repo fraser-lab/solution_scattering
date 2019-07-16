@@ -1,5 +1,6 @@
 # Solution Scattering
 ------------------
+[![DOI](https://zenodo.org/badge/47163753.svg)](https://zenodo.org/badge/latestdoi/47163753)
 
 ## Summary:
 
