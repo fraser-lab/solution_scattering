@@ -1,3 +1,14 @@
+"""
+Calculate the extrapolated structure packing factor (scattering from intermolecular interactions)
+based off of a dilution series, then write the structure packing factor as a dat file for further analysis.
+
+Usage:
+python3    structure_packing_calc.py    sample_directory
+
+Author(s):
+Alexander M. Wolff
+"""
+
 
 import pandas as pd
 import numpy as np
@@ -45,15 +56,14 @@ for temp in TEMPS:
 	I_0s_errors = []
 	for i in new.index:
 	    y = np.array([1/(new["I_pc0"][i]),1/(new["I_pc1"][i]),1/(new["I_pc2"][i])])
-	    x = np.array([0.050,0.050/3,0.050/9])
-	    # model = linregress(x,y)
+	    x = np.array([0.050,0.050/3,0.050/9])   ### hard-coded protein concentrations in grams/L
 	    popt, pcov = scipy.optimize.curve_fit(linear, x, y, method='lm', p0=[-10,10], maxfev=50000)
 
 	    # I_0 = np.exp(popt[1])
 	    I_0 = 1/popt[1]
 	    slope = popt[0]
 	    I_0_error = np.sqrt(pcov[1][1])
-	    MW = 18500
+	    MW = 18500   ### hard-coded protein molecular weight in Da
 	    A = slope*I_0/(2*MW)
 	    I_0s.append(I_0)
 	    A_s.append(A)
