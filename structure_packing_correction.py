@@ -1,3 +1,14 @@
+"""
+Correct time-resolved data for packing effects (scattering from intermolecular interactions). This script divides all
+time resolved DATs by the structure packing factor DAT, and then writes new DAT files with the corrected data.
+
+Usage:
+python3    structure_packing_calc.py    sample_directory    structure_packing_factor.dat
+
+Author(s):
+Alexander M. Wolff
+"""
+
 import pandas as pd
 import numpy as np
 import pathlib
