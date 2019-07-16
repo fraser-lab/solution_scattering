@@ -1,3 +1,18 @@
+
+"""
+Correct static data for packing effects (scattering from intermolecular interactions). This script divides all
+static DATs by the structure packing factor DAT, and then writes new DAT files with the corrected data.
+Note that you can use the static_pattern_glob (e.g. *protein_only*.dat)
+to select from among all *.dat files within the sample directory.
+
+Usage:
+python3    spc2.py    sample_directory    static_pattern_glob    structure_packing_factor.dat
+
+Author(s):
+Alexander M. Wolff
+"""
+
+
 import pandas as pd
 import numpy as np
 import pathlib
