@@ -3,7 +3,7 @@ Calculate the extrapolated structure packing factor (scattering from intermolecu
 based off of a dilution series, then write the structure packing factor as a dat file for further analysis.
 
 Usage:
-python3    structure_packing_calc.py    sample_directory
+python3    structure_factor_calc.py    sample_directory
 
 Author(s):
 Alexander M. Wolff

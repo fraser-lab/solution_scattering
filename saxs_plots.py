@@ -1,3 +1,6 @@
+#Useful tools and functions for SAXS data analysis
+
+
 import numpy as np
 from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt

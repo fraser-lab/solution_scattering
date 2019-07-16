@@ -1,3 +1,5 @@
+#Calculate average T-jump from output of thermometry_timepoints.py
+
 import os
 import sys
 import numpy as np

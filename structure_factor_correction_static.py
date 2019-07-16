@@ -6,7 +6,7 @@ Note that you can use the static_pattern_glob (e.g. *protein_only*.dat)
 to select from among all *.dat files within the sample directory.
 
 Usage:
-python3    spc2.py    sample_directory    static_pattern_glob    structure_packing_factor.dat
+python3    structure_factor_correction_static.py    sample_directory    static_pattern_glob    structure_packing_factor.dat
 
 Author(s):
 Alexander M. Wolff
