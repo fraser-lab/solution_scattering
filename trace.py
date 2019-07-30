@@ -189,7 +189,7 @@ class Trace(object):
 	    return
 		
 	def __repr__(self):
-		"""Return a printable version of the trace object.""""
+		"""Return a printable version of the trace object."""
 		final = "Q\tSA\tsigSA\tNj\n"
 		for index, _ in enumerate(self.q):
 			final += ("{0}\t{1}\t{2}\t{3}\n".format(self.q[index], self.SA[index],
