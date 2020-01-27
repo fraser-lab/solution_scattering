@@ -95,7 +95,7 @@ def parse_tpkl(filename):
     Trace:custom object built to hold a single scattering curve and
     associated values
     """
-    TPKL_HEADER_BYTES = 279 ### this value could vary
+    TPKL_HEADER_BYTES = 290 ### this value could vary (March 2018)
     with open(filename, "rb") as f:
         f.seek(TPKL_HEADER_BYTES)
         data = np.fromfile(f, dtype=dt)
